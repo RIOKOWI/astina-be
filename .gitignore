@@ -21,3 +21,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+.gitignore
+docs
+CLAUDE.md
