@@ -47,6 +47,11 @@ class User extends Authenticatable
             ->withPivot('created_at');
     }
 
+    public function hasRole(string $roleCode): bool
+    {
+        return $this->roles->contains('code', $roleCode);
+    }
+
     public function deviceTokens(): HasMany
     {
         return $this->hasMany(DeviceToken::class);
