@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Role extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'name',
         'code',
@@ -15,7 +18,6 @@ class Role extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'role_user')
-            ->withPivot('created_at')
-            ->withTimestamps(false);
+            ->withPivot('created_at');
     }
 }
