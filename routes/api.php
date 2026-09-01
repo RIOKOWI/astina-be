@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\HouseholdController;
 use App\Http\Controllers\Api\MeController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ResidentController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,5 +27,12 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/households', [HouseholdController::class, 'index']);
         Route::get('/households/{household}', [HouseholdController::class, 'show']);
+
+        Route::post('/device-tokens', [DeviceTokenController::class, 'store']);
+        Route::delete('/device-tokens/{token}', [DeviceTokenController::class, 'destroy']);
+
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+        Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     });
 });
