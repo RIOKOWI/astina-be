@@ -25,3 +25,4 @@ yarn-error.log
 docs
 CLAUDE.md
 storage/app/firebase
+database/seeders/AuthTestSeeder.php
