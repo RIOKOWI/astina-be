@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\HouseholdController;
 use App\Http\Controllers\Api\MeController;
@@ -44,5 +45,14 @@ Route::prefix('v1')->group(function () {
         Route::post('/activities/{activity}/read', [ActivityController::class, 'read']);
         Route::post('/activities/{activity}/attachments', [ActivityController::class, 'storeAttachment']);
         Route::delete('/activities/{activity}/attachments/{attachment}', [ActivityController::class, 'destroyAttachment']);
+
+        Route::get('/complaints', [ComplaintController::class, 'index']);
+        Route::post('/complaints', [ComplaintController::class, 'store']);
+        Route::get('/complaints/{complaint}', [ComplaintController::class, 'show']);
+        Route::patch('/complaints/{complaint}/status', [ComplaintController::class, 'updateStatus']);
+        Route::post('/complaints/{complaint}/attachments', [ComplaintController::class, 'storeAttachment']);
+        Route::delete('/complaints/{complaint}/attachments/{attachment}', [ComplaintController::class, 'destroyAttachment']);
+        Route::get('/complaints/{complaint}/comments', [ComplaintController::class, 'comments']);
+        Route::post('/complaints/{complaint}/comments', [ComplaintController::class, 'storeComment']);
     });
 });
