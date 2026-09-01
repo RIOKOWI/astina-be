@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\HouseholdController;
@@ -34,5 +35,14 @@ Route::prefix('v1')->group(function () {
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
         Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+
+        Route::get('/activities', [ActivityController::class, 'index']);
+        Route::post('/activities', [ActivityController::class, 'store']);
+        Route::get('/activities/{activity}', [ActivityController::class, 'show']);
+        Route::put('/activities/{activity}', [ActivityController::class, 'update']);
+        Route::delete('/activities/{activity}', [ActivityController::class, 'destroy']);
+        Route::post('/activities/{activity}/read', [ActivityController::class, 'read']);
+        Route::post('/activities/{activity}/attachments', [ActivityController::class, 'storeAttachment']);
+        Route::delete('/activities/{activity}/attachments/{attachment}', [ActivityController::class, 'destroyAttachment']);
     });
 });
