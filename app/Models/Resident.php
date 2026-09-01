@@ -43,6 +43,11 @@ class Resident extends Model
         return $this->hasOne(User::class);
     }
 
+    public function headedHousehold(): HasOne
+    {
+        return $this->hasOne(Household::class, 'head_resident_id');
+    }
+
     public function households(): BelongsToMany
     {
         return $this->belongsToMany(Household::class, 'resident_households')
