@@ -5,9 +5,13 @@ use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\DeviceTokenController;
+use App\Http\Controllers\Api\DueController;
+use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\HouseholdController;
 use App\Http\Controllers\Api\MeController;
+use App\Http\Controllers\Api\MyDueBillController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\SosController;
 use Illuminate\Support\Facades\Route;
@@ -70,5 +74,31 @@ Route::prefix('v1')->group(function () {
         Route::get('/sos/alerts/{sos}', [SosController::class, 'show']);
         Route::post('/sos/alerts/{sos}/resolve', [SosController::class, 'resolve']);
         Route::post('/sos/alerts/{sos}/responses', [SosController::class, 'storeResponse']);
+
+        // Due management (RT only)
+        Route::get('/dues', [DueController::class, 'index']);
+        Route::post('/dues', [DueController::class, 'store']);
+        Route::get('/dues/{due}', [DueController::class, 'show']);
+        Route::put('/dues/{due}', [DueController::class, 'update']);
+        Route::delete('/dues/{due}', [DueController::class, 'destroy']);
+        Route::post('/dues/generate-bills', [DueController::class, 'generateDueBills']);
+        Route::get('/dues/{due}/due-bills', [DueController::class, 'dueBills']);
+
+        // My due bills (warga)
+        Route::get('/my/due-bills', [MyDueBillController::class, 'index']);
+
+        // Payment
+        Route::get('/my/payments', [PaymentController::class, 'myPayments']);
+        Route::post('/payments', [PaymentController::class, 'store']);
+        Route::get('/payments/pending', [PaymentController::class, 'pending']);
+        Route::get('/payments/{payment}', [PaymentController::class, 'show']);
+        Route::post('/payments/{payment}/proof', [PaymentController::class, 'uploadProof']);
+        Route::post('/payments/{payment}/approve', [PaymentController::class, 'approve']);
+        Route::post('/payments/{payment}/reject', [PaymentController::class, 'reject']);
+
+        // Finance transparency
+        Route::get('/finance/summary', [FinanceController::class, 'summary']);
+        Route::get('/finance/transactions', [FinanceController::class, 'transactions']);
+        Route::post('/finance/transactions', [FinanceController::class, 'storeTransaction']);
     });
 });
