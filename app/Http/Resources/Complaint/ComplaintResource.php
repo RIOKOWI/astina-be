@@ -18,8 +18,9 @@ class ComplaintResource extends JsonResource
             'status' => $this->status,
             'rejection_reason' => $this->rejection_reason,
             'submitted_at' => $this->submitted_at?->toIso8601String(),
-            'approved_at' => $this->approved_at?->toIso8601String(),
+            'reviewed_at' => $this->reviewed_at?->toIso8601String(),
             'resolved_at' => $this->resolved_at?->toIso8601String(),
+            'closed_at' => $this->closed_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),
             'resident' => $this->whenLoaded('resident', fn () => [
