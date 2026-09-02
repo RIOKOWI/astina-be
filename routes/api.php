@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ActivityController;
+use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\DeviceTokenController;
@@ -54,5 +55,13 @@ Route::prefix('v1')->group(function () {
         Route::delete('/complaints/{complaint}/attachments/{attachment}', [ComplaintController::class, 'destroyAttachment']);
         Route::get('/complaints/{complaint}/comments', [ComplaintController::class, 'comments']);
         Route::post('/complaints/{complaint}/comments', [ComplaintController::class, 'storeComment']);
+
+        Route::get('/assets', [AssetController::class, 'index']);
+        Route::post('/assets', [AssetController::class, 'store']);
+        Route::get('/assets/{asset}', [AssetController::class, 'show']);
+        Route::put('/assets/{asset}', [AssetController::class, 'update']);
+        Route::delete('/assets/{asset}', [AssetController::class, 'destroy']);
+        Route::post('/assets/{asset}/movements', [AssetController::class, 'storeMovement']);
+        Route::get('/assets/{asset}/movements', [AssetController::class, 'movements']);
     });
 });
