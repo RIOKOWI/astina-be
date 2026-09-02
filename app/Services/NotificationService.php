@@ -67,6 +67,16 @@ class NotificationService
         $this->sendToUsers($users, $type, $title, $body, $data);
     }
 
+    public function sendToUsersWithRole(string $roleCode, string $type, string $title, string $body, array $data = []): void
+    {
+        $users = User::whereHas('roles', fn ($q) => $q->where('code', $roleCode))
+            ->where('is_active', true)
+            ->with('deviceTokens')
+            ->get();
+
+        $this->sendToUsers($users, $type, $title, $body, $data);
+    }
+
     private function getActiveTokens(User $user): Collection
     {
         return $user->deviceTokens()->whereNull('revoked_at')->get();
