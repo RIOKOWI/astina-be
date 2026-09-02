@@ -113,6 +113,13 @@ class ComplaintService
             abort(422, 'Alasan penolakan wajib diisi.');
         }
 
+        if (isset($data['assigned_to'])) {
+            $assignee = User::find($data['assigned_to']);
+            if (! $assignee || ! $assignee->hasRole('rt')) {
+                abort(422, 'Penanggung jawab harus merupakan user dengan role RT.');
+            }
+        }
+
         $updateData = ['status' => $newStatus];
 
         if ($newStatus === 'rejected') {
@@ -120,11 +127,15 @@ class ComplaintService
         }
 
         if ($newStatus === 'reviewed') {
-            $updateData['approved_at'] = now();
+            $updateData['reviewed_at'] = now();
         }
 
         if ($newStatus === 'resolved') {
             $updateData['resolved_at'] = now();
+        }
+
+        if ($newStatus === 'closed') {
+            $updateData['closed_at'] = now();
         }
 
         if (isset($data['assigned_to'])) {
