@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             HouseholdSeeder::class,
             AssetSeeder::class,
             ComplaintSeeder::class,
+            FinanceSeeder::class,
         ]);
     }
 }
