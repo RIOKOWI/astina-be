@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\HouseholdController;
 use App\Http\Controllers\Api\MeController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ResidentController;
+use App\Http\Controllers\Api\SosController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -63,5 +64,11 @@ Route::prefix('v1')->group(function () {
         Route::delete('/assets/{asset}', [AssetController::class, 'destroy']);
         Route::post('/assets/{asset}/movements', [AssetController::class, 'storeMovement']);
         Route::get('/assets/{asset}/movements', [AssetController::class, 'movements']);
+
+        Route::get('/sos/alerts/active', [SosController::class, 'active']);
+        Route::post('/sos/alerts', [SosController::class, 'store']);
+        Route::get('/sos/alerts/{sos}', [SosController::class, 'show']);
+        Route::post('/sos/alerts/{sos}/resolve', [SosController::class, 'resolve']);
+        Route::post('/sos/alerts/{sos}/responses', [SosController::class, 'storeResponse']);
     });
 });
