@@ -17,7 +17,7 @@ class UpdateDueRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'amount' => ['sometimes', 'integer', 'min:100'],
-            'frequency' => ['sometimes', 'in:monthly,quarterly,yearly,one-time'],
+            'frequency' => ['sometimes', 'in:monthly,quarterly,yearly,one_time'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'is_active' => ['sometimes', 'boolean'],
