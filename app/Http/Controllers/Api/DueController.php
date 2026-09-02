@@ -99,7 +99,7 @@ class DueController extends Controller
         ]);
     }
 
-    public function destroy(Request $request, Due $due): JsonResponse
+    public function destroy(Due $due): JsonResponse
     {
         $due = $this->dueService->deactivate($due);
 
@@ -126,7 +126,7 @@ class DueController extends Controller
         ]);
     }
 
-    public function dueBills(Due $due): JsonResponse
+    public function dueBills(Request $request, Due $due): JsonResponse
     {
         $user = $request->user();
         if (! $user->hasRole('rt')) {
