@@ -16,7 +16,7 @@ class StorePaymentRequest extends FormRequest
         return [
             'due_bill_id' => ['required', 'integer'],
             'amount' => ['required', 'integer', 'min:100'],
-            'method' => ['nullable', 'in:transfer,cash,qris'],
+            'method' => ['nullable', 'in:cash,transfer,ewallet,other'],
         ];
     }
 }
