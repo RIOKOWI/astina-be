@@ -11,6 +11,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AuthTestSeeder::class,
             HouseholdSeeder::class,
+            AssetSeeder::class,
+            ComplaintSeeder::class,
         ]);
     }
 }
