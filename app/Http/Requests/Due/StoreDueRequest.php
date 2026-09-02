@@ -17,7 +17,7 @@ class StoreDueRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'amount' => ['required', 'integer', 'min:100'],
-            'frequency' => ['nullable', 'in:monthly,quarterly,yearly,one-time'],
+            'frequency' => ['nullable', 'in:monthly,quarterly,yearly,one_time'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'is_active' => ['nullable', 'boolean'],
