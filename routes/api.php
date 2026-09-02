@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\DueController;
 use App\Http\Controllers\Api\FinanceController;
 use App\Http\Controllers\Api\HouseholdController;
+use App\Http\Controllers\Api\LetterController;
+use App\Http\Controllers\Api\LetterTypeController;
 use App\Http\Controllers\Api\MeController;
 use App\Http\Controllers\Api\MyDueBillController;
 use App\Http\Controllers\Api\NotificationController;
@@ -95,6 +97,23 @@ Route::prefix('v1')->group(function () {
         Route::post('/payments/{payment}/proof', [PaymentController::class, 'uploadProof']);
         Route::post('/payments/{payment}/approve', [PaymentController::class, 'approve']);
         Route::post('/payments/{payment}/reject', [PaymentController::class, 'reject']);
+
+        // Letter Types
+        Route::get('/letter-types', [LetterTypeController::class, 'index']);
+        Route::get('/letter-types/{letter_type}', [LetterTypeController::class, 'show']);
+
+        // My Letters (warga)
+        Route::get('/my/letters', [LetterController::class, 'myLetters']);
+
+        // Letters
+        Route::post('/letters', [LetterController::class, 'store']);
+        Route::get('/letters/pending', [LetterController::class, 'pending']);
+        Route::get('/letters/{letter}', [LetterController::class, 'show']);
+        Route::get('/letters/{letter}/document', [LetterController::class, 'document']);
+        Route::post('/letters/{letter}/approve', [LetterController::class, 'approve']);
+        Route::post('/letters/{letter}/reject', [LetterController::class, 'reject']);
+        Route::post('/letters/{letter}/sign', [LetterController::class, 'sign']);
+        Route::post('/letters/{letter}/stamp', [LetterController::class, 'stamp']);
 
         // Finance transparency
         Route::get('/finance/summary', [FinanceController::class, 'summary']);
