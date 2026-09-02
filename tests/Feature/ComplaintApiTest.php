@@ -336,8 +336,8 @@ class ComplaintApiTest extends TestCase
             ->assertJsonStructure([
                 'data' => [
                     'id', 'reference_no', 'title', 'description', 'category',
-                    'status', 'rejection_reason', 'submitted_at', 'approved_at',
-                    'resolved_at', 'created_at', 'updated_at', 'resident',
+                    'status', 'rejection_reason', 'submitted_at', 'reviewed_at',
+                    'resolved_at', 'closed_at', 'created_at', 'updated_at', 'resident',
                     'assigned_to', 'attachments', 'comments', 'attachment_count',
                 ],
             ]);
@@ -512,7 +512,7 @@ class ComplaintApiTest extends TestCase
         ]);
     }
 
-    public function test_warga_cannot_upload_attachment(): void
+    public function test_warga_can_upload_attachment_own_complaint(): void
     {
         Storage::fake('public');
         $warga = $this->makeWargaUser();
@@ -524,7 +524,30 @@ class ComplaintApiTest extends TestCase
             'file' => $file,
         ]);
 
-        $response->assertStatus(403);
+        $response->assertStatus(201)
+            ->assertJson(['success' => true, 'message' => 'Lampiran berhasil diupload.']);
+
+        $this->assertDatabaseHas('complaint_attachments', [
+            'complaint_id' => $complaint->id,
+            'file_name' => 'foto.jpg',
+        ]);
+    }
+
+    public function test_warga_cannot_upload_attachment_other_complaint(): void
+    {
+        Storage::fake('public');
+        $warga = $this->makeWargaUser();
+        $otherWarga = $this->makeWargaUser();
+        $complaint = Complaint::factory()->submitted()->create(['resident_id' => $otherWarga->resident_id]);
+
+        $file = UploadedFile::fake()->create('foto.jpg', 1024, 'image/jpeg');
+
+        $response = $this->actingAsUser($warga)->postJson("/api/v1/complaints/{$complaint->id}/attachments", [
+            'file' => $file,
+        ]);
+
+        $response->assertStatus(403)
+            ->assertJson(['success' => false]);
     }
 
     public function test_attachment_rejects_invalid_file_type(): void
@@ -580,6 +603,52 @@ class ComplaintApiTest extends TestCase
             ->assertJson(['success' => true, 'message' => 'Lampiran berhasil dihapus.']);
 
         $this->assertDatabaseMissing('complaint_attachments', ['id' => $attachment->id]);
+    }
+
+    public function test_warga_can_delete_attachment_while_submitted(): void
+    {
+        Storage::fake('public');
+        $warga = $this->makeWargaUser();
+        $complaint = Complaint::factory()->submitted()->create(['resident_id' => $warga->resident_id]);
+
+        $attachment = ComplaintAttachment::create([
+            'complaint_id' => $complaint->id,
+            'path' => 'complaints/1/test.jpg',
+            'file_name' => 'test.jpg',
+            'mime_type' => 'image/jpeg',
+            'file_size' => 1024,
+            'created_at' => now(),
+        ]);
+
+        $response = $this->actingAsUser($warga)->deleteJson("/api/v1/complaints/{$complaint->id}/attachments/{$attachment->id}");
+
+        $response->assertOk()
+            ->assertJson(['success' => true, 'message' => 'Lampiran berhasil dihapus.']);
+
+        $this->assertDatabaseMissing('complaint_attachments', ['id' => $attachment->id]);
+    }
+
+    public function test_warga_cannot_delete_attachment_after_review(): void
+    {
+        Storage::fake('public');
+        $warga = $this->makeWargaUser();
+        $complaint = Complaint::factory()->reviewed()->create(['resident_id' => $warga->resident_id]);
+
+        $attachment = ComplaintAttachment::create([
+            'complaint_id' => $complaint->id,
+            'path' => 'complaints/1/test.jpg',
+            'file_name' => 'test.jpg',
+            'mime_type' => 'image/jpeg',
+            'file_size' => 1024,
+            'created_at' => now(),
+        ]);
+
+        $response = $this->actingAsUser($warga)->deleteJson("/api/v1/complaints/{$complaint->id}/attachments/{$attachment->id}");
+
+        $response->assertStatus(403)
+            ->assertJson(['success' => false]);
+
+        $this->assertDatabaseHas('complaint_attachments', ['id' => $attachment->id]);
     }
 
     public function test_cannot_delete_attachment_belonging_to_another_complaint(): void
@@ -705,6 +774,91 @@ class ComplaintApiTest extends TestCase
         ]);
 
         $response->assertStatus(404);
+    }
+
+    public function test_comment_on_closed_complaint_forbidden(): void
+    {
+        $warga = $this->makeWargaUser();
+        $complaint = Complaint::factory()->closed()->create(['resident_id' => $warga->resident_id]);
+
+        $response = $this->actingAsUser($warga)->postJson("/api/v1/complaints/{$complaint->id}/comments", [
+            'comment' => 'Ini tidak boleh.',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJson(['success' => false]);
+    }
+
+    public function test_comment_on_rejected_complaint_forbidden(): void
+    {
+        $warga = $this->makeWargaUser();
+        $complaint = Complaint::factory()->rejected()->create(['resident_id' => $warga->resident_id]);
+
+        $response = $this->actingAsUser($warga)->postJson("/api/v1/complaints/{$complaint->id}/comments", [
+            'comment' => 'Ini tidak boleh.',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJson(['success' => false]);
+    }
+
+    public function test_comment_max_length(): void
+    {
+        $warga = $this->makeWargaUser();
+        $complaint = Complaint::factory()->submitted()->create(['resident_id' => $warga->resident_id]);
+
+        $response = $this->actingAsUser($warga)->postJson("/api/v1/complaints/{$complaint->id}/comments", [
+            'comment' => str_repeat('a', 1001),
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['comment']);
+    }
+
+    // --- Assignment ---
+
+    public function test_assign_rt_user_as_handler(): void
+    {
+        Queue::fake();
+        $rt = $this->makeRtUser();
+        $complaint = Complaint::factory()->submitted()->create();
+
+        $response = $this->actingAsUser($rt)->patchJson("/api/v1/complaints/{$complaint->id}/status", [
+            'status' => 'reviewed',
+            'assigned_to' => $rt->id,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.assigned_to.id', $rt->id);
+    }
+
+    public function test_cannot_assign_warga_as_handler(): void
+    {
+        Queue::fake();
+        $rt = $this->makeRtUser();
+        $warga = $this->makeWargaUser();
+        $complaint = Complaint::factory()->submitted()->create();
+
+        $response = $this->actingAsUser($rt)->patchJson("/api/v1/complaints/{$complaint->id}/status", [
+            'status' => 'reviewed',
+            'assigned_to' => $warga->id,
+        ]);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_cannot_assign_nonexistent_user_as_handler(): void
+    {
+        Queue::fake();
+        $rt = $this->makeRtUser();
+        $complaint = Complaint::factory()->submitted()->create();
+
+        $response = $this->actingAsUser($rt)->patchJson("/api/v1/complaints/{$complaint->id}/status", [
+            'status' => 'reviewed',
+            'assigned_to' => 99999,
+        ]);
+
+        $response->assertStatus(422);
     }
 
     // --- Notification ---
