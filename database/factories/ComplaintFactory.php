@@ -36,7 +36,7 @@ class ComplaintFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'reviewed',
-            'approved_at' => now(),
+            'reviewed_at' => now(),
         ]);
     }
 
@@ -44,7 +44,7 @@ class ComplaintFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'in_progress',
-            'approved_at' => now(),
+            'reviewed_at' => now(),
         ]);
     }
 
@@ -52,7 +52,7 @@ class ComplaintFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'resolved',
-            'approved_at' => now(),
+            'reviewed_at' => now(),
             'resolved_at' => now(),
         ]);
     }
@@ -61,8 +61,9 @@ class ComplaintFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'closed',
-            'approved_at' => now(),
+            'reviewed_at' => now(),
             'resolved_at' => now(),
+            'closed_at' => now(),
         ]);
     }
 
