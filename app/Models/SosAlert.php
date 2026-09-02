@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SosAlert extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'triggered_by',
         'latitude',
@@ -42,5 +44,10 @@ class SosAlert extends Model
     public function responses(): HasMany
     {
         return $this->hasMany(SosResponse::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
     }
 }
