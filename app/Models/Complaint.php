@@ -21,16 +21,18 @@ class Complaint extends Model
         'status',
         'rejection_reason',
         'submitted_at',
-        'approved_at',
+        'reviewed_at',
         'resolved_at',
+        'closed_at',
     ];
 
     protected function casts(): array
     {
         return [
             'submitted_at' => 'datetime',
-            'approved_at' => 'datetime',
+            'reviewed_at' => 'datetime',
             'resolved_at' => 'datetime',
+            'closed_at' => 'datetime',
         ];
     }
 
