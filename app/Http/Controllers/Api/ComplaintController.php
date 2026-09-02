@@ -116,6 +116,17 @@ class ComplaintController extends Controller
 
     public function storeAttachment(StoreComplaintAttachmentRequest $request, Complaint $complaint): JsonResponse
     {
+        $user = $request->user();
+
+        if (! $user->hasRole('rt') && $complaint->resident_id !== $user->resident_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk mengupload lampiran.',
+                'errors' => null,
+                'data' => null,
+            ], 403);
+        }
+
         $attachment = $this->complaintService->storeAttachment($complaint, $request->validated());
 
         return response()->json([
@@ -128,6 +139,8 @@ class ComplaintController extends Controller
 
     public function destroyAttachment(Request $request, Complaint $complaint, ComplaintAttachment $attachment): JsonResponse
     {
+        $user = $request->user();
+
         if ($attachment->complaint_id !== $complaint->id) {
             return response()->json([
                 'success' => false,
@@ -135,6 +148,19 @@ class ComplaintController extends Controller
                 'errors' => null,
                 'data' => null,
             ], 404);
+        }
+
+        if ($user->hasRole('rt')) {
+            // RT boleh hapus lampiran apapun
+        } elseif ($complaint->resident_id === $user->resident_id && $complaint->status === 'submitted') {
+            // Warga boleh hapus lampiranmilik sendiri hanya jika complaint masih submitted
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses untuk menghapus lampiran ini.',
+                'errors' => null,
+                'data' => null,
+            ], 403);
         }
 
         $this->complaintService->deleteAttachment($attachment);
@@ -181,6 +207,15 @@ class ComplaintController extends Controller
                 'errors' => null,
                 'data' => null,
             ], 404);
+        }
+
+        if (in_array($complaint->status, ['closed', 'rejected'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak dapat menambahkan komentar pada pengaduan yang sudah ditutup atau ditolak.',
+                'errors' => null,
+                'data' => null,
+            ], 422);
         }
 
         $comment = $this->complaintService->storeComment($complaint, $request->validated(), $user);
