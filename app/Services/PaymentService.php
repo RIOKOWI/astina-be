@@ -17,6 +17,7 @@ class PaymentService
 {
     public function __construct(
         private readonly NotificationService $notificationService,
+        private readonly ImageService $imageService,
     ) {}
 
     public function createPayment(DueBill $dueBill, array $data, User $user): Payment
@@ -58,18 +59,35 @@ class PaymentService
         }
 
         $file = $data['file'];
-        $uuid = Str::uuid()->toString();
-        $extension = $file->getClientOriginalExtension();
-        $filename = "{$uuid}.{$extension}";
-        $path = $file->storeAs("payment-proofs/{$payment->id}", $filename, 'public');
+        $directory = "payment-proofs/{$payment->id}";
+        $isImage = in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/webp'], true);
+
+        if ($isImage) {
+            $result = $this->imageService->process($file);
+            $path = "{$directory}/{$result->filename}";
+            $mimeType = $result->mimeType;
+            $fileSize = $result->fileSize;
+        } else {
+            // PDF: store directly without processing
+            $filename = Str::uuid()->toString().'.pdf';
+            $path = "{$directory}/{$filename}";
+            $mimeType = $file->getMimeType();
+            $fileSize = $file->getSize();
+        }
 
         try {
+            if ($isImage) {
+                Storage::disk('public')->put($path, $result->contents);
+            } else {
+                Storage::disk('public')->put($path, file_get_contents($file->getPathname()));
+            }
+
             $proof = PaymentProof::create([
                 'payment_id' => $payment->id,
                 'path' => $path,
                 'file_name' => $file->getClientOriginalName(),
-                'mime_type' => $file->getMimeType(),
-                'file_size' => $file->getSize(),
+                'mime_type' => $mimeType,
+                'file_size' => $fileSize,
                 'created_at' => now(),
             ]);
 
