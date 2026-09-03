@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             AssetSeeder::class,
             ComplaintSeeder::class,
             FinanceSeeder::class,
+            ActivitySeeder::class,
             LetterSeeder::class,
         ]);
     }
