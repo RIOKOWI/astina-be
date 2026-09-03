@@ -31,6 +31,9 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me/resident', [MeController::class, 'resident']);
         Route::get('/me/household', [MeController::class, 'household']);
+        Route::get('/me/documents', [MeController::class, 'documents']);
+        Route::post('/me/documents/ktp', [MeController::class, 'uploadKtp']);
+        Route::post('/me/documents/kk', [MeController::class, 'uploadKk']);
 
         Route::get('/residents', [ResidentController::class, 'index']);
         Route::get('/residents/{resident}', [ResidentController::class, 'show']);
