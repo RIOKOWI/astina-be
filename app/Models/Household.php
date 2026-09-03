@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Household extends Model
 {
@@ -31,5 +32,10 @@ class Household extends Model
         return $this->belongsToMany(Resident::class, 'resident_households')
             ->withPivot('relationship', 'joined_at', 'left_at', 'is_current')
             ->withTimestamps();
+    }
+
+    public function media(): MorphMany
+    {
+        return $this->morphMany(Media::class, 'model');
     }
 }
