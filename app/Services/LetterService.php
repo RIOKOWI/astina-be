@@ -32,6 +32,7 @@ class LetterService
 
     public function __construct(
         private readonly NotificationService $notificationService,
+        private readonly ImageService $imageService,
     ) {}
 
     public function getActiveLetterTypes(): Collection
@@ -244,13 +245,13 @@ class LetterService
             abort(409, 'Surat sudah ditandatangani.');
         }
 
-        $uuid = Str::uuid()->toString();
-        $extension = $file->getClientOriginalExtension();
-        $filename = "{$uuid}.{$extension}";
-        $path = $file->storeAs("signatures/{$letter->id}", $filename, 'public');
+        $directory = "signatures/{$letter->id}";
+        $result = $this->imageService->process($file);
+        $path = "{$directory}/{$result->filename}";
 
         try {
-            $signatureHash = hash_file('sha256', $file->getRealPath());
+            Storage::disk('public')->put($path, $result->contents);
+            $signatureHash = hash('sha256', $result->contents);
 
             $signature = Signature::create([
                 'letter_id' => $letter->id,
@@ -265,6 +266,12 @@ class LetterService
                 'letter_id' => $letter->id,
                 'reference_no' => $letter->reference_no,
                 'signed_by' => $rt->id,
+                'original_size' => $file->getSize(),
+                'processed_size' => $result->fileSize,
+                'processed_mime' => $result->mimeType,
+                'width' => $result->processedWidth,
+                'height' => $result->processedHeight,
+                'feature' => 'signature',
             ]);
 
             return $signature;
@@ -290,12 +297,13 @@ class LetterService
             abort(409, 'Surat sudah distempel.');
         }
 
-        $uuid = Str::uuid()->toString();
-        $extension = $file->getClientOriginalExtension();
-        $filename = "{$uuid}.{$extension}";
-        $path = $file->storeAs("stamps/{$letter->id}", $filename, 'public');
+        $directory = "stamps/{$letter->id}";
+        $result = $this->imageService->process($file);
+        $path = "{$directory}/{$result->filename}";
 
         try {
+            Storage::disk('public')->put($path, $result->contents);
+
             $stamp = Stamp::create([
                 'letter_id' => $letter->id,
                 'stamped_by' => $rt->id,
@@ -323,6 +331,12 @@ class LetterService
                 'letter_id' => $letter->id,
                 'reference_no' => $letter->reference_no,
                 'stamped_by' => $rt->id,
+                'original_size' => $file->getSize(),
+                'processed_size' => $result->fileSize,
+                'processed_mime' => $result->mimeType,
+                'width' => $result->processedWidth,
+                'height' => $result->processedHeight,
+                'feature' => 'stamp',
             ]);
 
             return $stamp;
