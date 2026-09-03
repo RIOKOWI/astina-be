@@ -24,6 +24,7 @@ class ComplaintService
 
     public function __construct(
         private readonly NotificationService $notificationService,
+        private readonly ImageService $imageService,
     ) {}
 
     public function getList(?string $search = null, ?string $status = null, ?string $category = null, int $perPage = 15): LengthAwarePaginator
@@ -158,18 +159,19 @@ class ComplaintService
     public function storeAttachment(Complaint $complaint, array $data): ComplaintAttachment
     {
         $file = $data['file'];
-        $uuid = Str::uuid()->toString();
-        $extension = $file->getClientOriginalExtension();
-        $filename = "{$uuid}.{$extension}";
-        $path = $file->storeAs("complaints/{$complaint->id}", $filename, 'public');
+        $directory = "complaints/{$complaint->id}";
+        $result = $this->imageService->process($file);
+        $path = "{$directory}/{$result->filename}";
 
         try {
+            Storage::disk('public')->put($path, $result->contents);
+
             return ComplaintAttachment::create([
                 'complaint_id' => $complaint->id,
                 'path' => $path,
                 'file_name' => $file->getClientOriginalName(),
-                'mime_type' => $file->getMimeType(),
-                'file_size' => $file->getSize(),
+                'mime_type' => $result->mimeType,
+                'file_size' => $result->fileSize,
                 'created_at' => now(),
             ]);
         } catch (\Throwable $e) {
