@@ -494,7 +494,7 @@ class ComplaintApiTest extends TestCase
         $rt = $this->makeRtUser();
         $complaint = Complaint::factory()->submitted()->create();
 
-        $file = UploadedFile::fake()->create('foto.jpg', 1024, 'image/jpeg');
+        $file = UploadedFile::fake()->image('foto.jpg', 800, 600);
 
         $response = $this->actingAsUser($rt)->postJson("/api/v1/complaints/{$complaint->id}/attachments", [
             'file' => $file,
@@ -518,7 +518,7 @@ class ComplaintApiTest extends TestCase
         $warga = $this->makeWargaUser();
         $complaint = Complaint::factory()->submitted()->create(['resident_id' => $warga->resident_id]);
 
-        $file = UploadedFile::fake()->create('foto.jpg', 1024, 'image/jpeg');
+        $file = UploadedFile::fake()->image('foto.jpg', 800, 600);
 
         $response = $this->actingAsUser($warga)->postJson("/api/v1/complaints/{$complaint->id}/attachments", [
             'file' => $file,
@@ -540,7 +540,7 @@ class ComplaintApiTest extends TestCase
         $otherWarga = $this->makeWargaUser();
         $complaint = Complaint::factory()->submitted()->create(['resident_id' => $otherWarga->resident_id]);
 
-        $file = UploadedFile::fake()->create('foto.jpg', 1024, 'image/jpeg');
+        $file = UploadedFile::fake()->image('foto.jpg', 800, 600);
 
         $response = $this->actingAsUser($warga)->postJson("/api/v1/complaints/{$complaint->id}/attachments", [
             'file' => $file,
@@ -572,7 +572,7 @@ class ComplaintApiTest extends TestCase
         $rt = $this->makeRtUser();
         $complaint = Complaint::factory()->submitted()->create();
 
-        $file = UploadedFile::fake()->create('large.jpg', 10241, 'image/jpeg');
+        $file = UploadedFile::fake()->image('large.jpg', 1, 1)->size(11000);
 
         $response = $this->actingAsUser($rt)->postJson("/api/v1/complaints/{$complaint->id}/attachments", [
             'file' => $file,
