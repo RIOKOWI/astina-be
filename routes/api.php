@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\DueController;
 use App\Http\Controllers\Api\FinanceController;
+use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\HouseholdController;
 use App\Http\Controllers\Api\LetterController;
 use App\Http\Controllers\Api\LetterTypeController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Api\SosController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
+    Route::get('/health', [HealthController::class, 'check']);
     Route::prefix('auth')->group(function () {
         Route::post('/login', [AuthController::class, 'login']);
 
