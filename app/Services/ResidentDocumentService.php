@@ -10,10 +10,13 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ResidentDocumentService
 {
+    public function __construct(
+        private readonly ImageService $imageService,
+    ) {}
+
     public function getMyDocuments(User $user): ?array
     {
         $resident = Resident::query()->find($user->resident_id);
@@ -53,19 +56,25 @@ class ResidentDocumentService
         $resident = Resident::query()->findOrFail($user->resident_id);
 
         return DB::transaction(function () use ($resident, $file, $user) {
-            // Remove existing KTP
+            // Remove existing KTP first
             $existing = $resident->media()
                 ->where('collection', Media::COLLECTION_KTP)
                 ->first();
 
+            $oldPath = $existing?->path;
+            $oldDisk = $existing?->disk;
+
             if ($existing) {
-                $this->deleteMediaFile($existing);
                 $existing->delete();
             }
 
-            $path = $this->storeFile($file, "residents/{$resident->id}/documents/ktp");
+            $directory = "residents/{$resident->id}/documents/ktp";
+            $result = $this->imageService->process($file);
+            $path = "{$directory}/{$result->filename}";
 
             try {
+                Storage::disk('public')->put($path, $result->contents);
+
                 $media = Media::create([
                     'model_type' => Resident::class,
                     'model_id' => $resident->id,
@@ -73,14 +82,25 @@ class ResidentDocumentService
                     'disk' => 'public',
                     'path' => $path,
                     'file_name' => $file->getClientOriginalName(),
-                    'mime_type' => $file->getMimeType(),
-                    'file_size' => $file->getSize(),
+                    'mime_type' => $result->mimeType,
+                    'file_size' => $result->fileSize,
                 ]);
+
+                // Delete old file after new one is safely stored
+                if ($oldPath && $oldDisk) {
+                    $this->deleteMediaFile($oldPath, $oldDisk);
+                }
 
                 Log::info('KTP uploaded', [
                     'resident_id' => $resident->id,
                     'user_id' => $user->id,
                     'media_id' => $media->id,
+                    'original_size' => $file->getSize(),
+                    'processed_size' => $result->fileSize,
+                    'processed_mime' => $result->mimeType,
+                    'width' => $result->processedWidth,
+                    'height' => $result->processedHeight,
+                    'feature' => 'ktp',
                 ]);
 
                 return $this->formatMedia($media);
@@ -101,19 +121,25 @@ class ResidentDocumentService
         }
 
         return DB::transaction(function () use ($household, $file, $user) {
-            // Remove existing KK
+            // Remove existing KK first
             $existing = $household->media()
                 ->where('collection', Media::COLLECTION_KK)
                 ->first();
 
+            $oldPath = $existing?->path;
+            $oldDisk = $existing?->disk;
+
             if ($existing) {
-                $this->deleteMediaFile($existing);
                 $existing->delete();
             }
 
-            $path = $this->storeFile($file, "households/{$household->id}/documents/kk");
+            $directory = "households/{$household->id}/documents/kk";
+            $result = $this->imageService->process($file);
+            $path = "{$directory}/{$result->filename}";
 
             try {
+                Storage::disk('public')->put($path, $result->contents);
+
                 $media = Media::create([
                     'model_type' => Household::class,
                     'model_id' => $household->id,
@@ -121,14 +147,25 @@ class ResidentDocumentService
                     'disk' => 'public',
                     'path' => $path,
                     'file_name' => $file->getClientOriginalName(),
-                    'mime_type' => $file->getMimeType(),
-                    'file_size' => $file->getSize(),
+                    'mime_type' => $result->mimeType,
+                    'file_size' => $result->fileSize,
                 ]);
+
+                // Delete old file after new one is safely stored
+                if ($oldPath && $oldDisk) {
+                    $this->deleteMediaFile($oldPath, $oldDisk);
+                }
 
                 Log::info('KK uploaded', [
                     'household_id' => $household->id,
                     'user_id' => $user->id,
                     'media_id' => $media->id,
+                    'original_size' => $file->getSize(),
+                    'processed_size' => $result->fileSize,
+                    'processed_mime' => $result->mimeType,
+                    'width' => $result->processedWidth,
+                    'height' => $result->processedHeight,
+                    'feature' => 'kk',
                 ]);
 
                 return $this->formatMedia($media);
@@ -156,19 +193,10 @@ class ResidentDocumentService
         return $households->first();
     }
 
-    private function storeFile(UploadedFile $file, string $directory): string
+    private function deleteMediaFile(string $path, string $disk): void
     {
-        $uuid = Str::uuid()->toString();
-        $extension = $file->getClientOriginalExtension();
-        $filename = "{$uuid}.{$extension}";
-
-        return $file->storeAs($directory, $filename, 'public');
-    }
-
-    private function deleteMediaFile(Media $media): void
-    {
-        if (Storage::disk($media->disk)->exists($media->path)) {
-            Storage::disk($media->disk)->delete($media->path);
+        if (Storage::disk($disk)->exists($path)) {
+            Storage::disk($disk)->delete($path);
         }
     }
 
