@@ -9,11 +9,13 @@ use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ActivityService
 {
     public function __construct(
         private readonly NotificationService $notificationService,
+        private readonly ImageService $imageService,
     ) {}
 
     public function getList(?string $search = null, ?string $status = null, int $perPage = 15): LengthAwarePaginator
@@ -126,17 +128,41 @@ class ActivityService
     public function storeAttachment(Activity $activity, array $data): ActivityAttachment
     {
         $file = $data['file'];
+        $directory = 'activities';
+        $isImage = in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/webp'], true);
 
-        $path = $file->store('activities', 'public');
+        if ($isImage) {
+            $result = $this->imageService->process($file);
+            $path = "{$directory}/{$result->filename}";
+            $mimeType = $result->mimeType;
+            $fileSize = $result->fileSize;
+        } else {
+            // PDF: store directly without processing
+            $filename = Str::uuid()->toString().'.pdf';
+            $path = "{$directory}/{$filename}";
+            $mimeType = $file->getMimeType();
+            $fileSize = $file->getSize();
+        }
 
-        return ActivityAttachment::create([
-            'activity_id' => $activity->id,
-            'path' => $path,
-            'file_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getMimeType(),
-            'file_size' => $file->getSize(),
-            'created_at' => now(),
-        ]);
+        try {
+            if ($isImage) {
+                Storage::disk('public')->put($path, $result->contents);
+            } else {
+                Storage::disk('public')->put($path, file_get_contents($file->getPathname()));
+            }
+
+            return ActivityAttachment::create([
+                'activity_id' => $activity->id,
+                'path' => $path,
+                'file_name' => $file->getClientOriginalName(),
+                'mime_type' => $mimeType,
+                'file_size' => $fileSize,
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Storage::disk('public')->delete($path);
+            throw $e;
+        }
     }
 
     public function deleteAttachment(ActivityAttachment $attachment): void
