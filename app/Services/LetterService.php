@@ -33,6 +33,7 @@ class LetterService
     public function __construct(
         private readonly NotificationService $notificationService,
         private readonly ImageService $imageService,
+        private readonly LetterDocumentService $letterDocumentService,
     ) {}
 
     public function getActiveLetterTypes(): Collection
@@ -186,17 +187,26 @@ class LetterService
                 'acted_at' => now(),
                 'created_at' => now(),
             ]);
+
+            // Load relations needed for document generation
+            $letter->load(['resident', 'letterType', 'fieldValues.letterField']);
+
+            // Generate the document (uses default sign/stamp from storage)
+            $this->letterDocumentService->generateForLetter($letter);
+
+            // Mark as completed after successful generation
+            $letter->update(['status' => 'completed']);
         });
 
-        Log::info('Letter approved', [
+        Log::info('Letter approved and document generated', [
             'letter_id' => $letter->id,
             'reference_no' => $letter->reference_no,
             'approved_by' => $rt->id,
         ]);
 
-        $this->notifyWarga($letter, 'letter_approved', 'Surat Disetujui', 'Surat Anda telah disetujui oleh RT dan siap ditandatangani.');
+        $this->notifyWarga($letter, 'letter_completed', 'Surat Selesai', 'Surat Anda telah disetujui dan dokumen sudah tersedia.');
 
-        return $letter->fresh()->load(['letterType', 'resident', 'fieldValues.letterField', 'approvals.approver']);
+        return $letter->fresh()->load(['letterType', 'resident', 'fieldValues.letterField', 'approvals.approver', 'documents']);
     }
 
     public function rejectLetter(Letter $letter, User $rt, string $reason): Letter
