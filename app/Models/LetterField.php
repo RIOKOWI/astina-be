@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class LetterField extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'letter_type_id',
         'field_key',
