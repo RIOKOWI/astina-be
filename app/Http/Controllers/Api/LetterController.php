@@ -124,8 +124,8 @@ class LetterController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Surat berhasil disetujui.',
-            'data' => new LetterResource($letter),
+            'message' => 'Surat berhasil disetujui dan dokumen telah dibuat.',
+            'data' => new LetterResource($letter->load('documents')),
             'meta' => null,
         ]);
     }
