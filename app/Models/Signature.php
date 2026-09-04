@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Signature extends Model
 {
     use HasFactory;
+
     public $timestamps = false;
 
     protected $fillable = [
