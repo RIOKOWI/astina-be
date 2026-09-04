@@ -14,7 +14,7 @@ class ImageServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ImageService();
+        $this->service = new ImageService;
     }
 
     public function test_process_jpeg_image_resizes_to_max_dimension(): void
