@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class LetterDocument extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'letter_id',
         'document_type',
