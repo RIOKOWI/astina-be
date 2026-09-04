@@ -15,7 +15,7 @@ class LetterFieldFactory extends Factory
     {
         return [
             'letter_type_id' => LetterType::factory(),
-            'field_key' => 'field_' . fake()->unique()->numberBetween(1, 99999),
+            'field_key' => 'field_'.fake()->unique()->numberBetween(1, 99999),
             'label' => fake()->words(2, true),
             'field_type' => fake()->randomElement(['text', 'number', 'date', 'textarea', 'select', 'checkbox']),
             'is_required' => fake()->boolean(),
