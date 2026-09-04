@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class LetterApproval extends Model
 {
     use HasFactory;
+
     public $timestamps = false;
 
     protected $fillable = [
