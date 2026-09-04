@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PaymentProof extends Model
 {
     use HasFactory;
+
     public $timestamps = false;
 
     protected $fillable = [
