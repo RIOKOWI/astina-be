@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class DueBill extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'due_id',
         'resident_id',
