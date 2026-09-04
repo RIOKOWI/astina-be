@@ -16,7 +16,7 @@ class LetterFactory extends Factory
     public function definition(): array
     {
         return [
-            'reference_no' => 'SK/' . fake()->unique()->numerify('RT05/######'),
+            'reference_no' => 'SK/'.fake()->unique()->numerify('RT05/######'),
             'letter_type_id' => LetterType::factory(),
             'resident_id' => Resident::factory(),
             'submitted_by' => User::factory(),
