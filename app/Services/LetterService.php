@@ -394,65 +394,9 @@ class LetterService
             return $existing;
         }
 
-        // Generate a simple placeholder document
-        // In production, this would integrate with a PDF generation library
-        $uuid = Str::uuid()->toString();
-        $filename = "{$uuid}.pdf";
-        $path = "letter-documents/{$letter->id}/{$filename}";
+        $letter->load(['resident', 'letterType', 'fieldValues.letterField']);
 
-        // Create a minimal text-based document (placeholder for real PDF generation)
-        $content = $this->generateLetterContent($letter);
-        Storage::disk('public')->put($path, $content);
-
-        try {
-            return LetterDocument::create([
-                'letter_id' => $letter->id,
-                'document_type' => 'final',
-                'path' => $path,
-                'file_name' => "surat-{$letter->reference_no}.pdf",
-                'mime_type' => 'application/pdf',
-                'file_size' => strlen($content),
-            ]);
-        } catch (\Throwable $e) {
-            Storage::disk('public')->delete($path);
-            throw $e;
-        }
-    }
-
-    private function generateLetterContent(Letter $letter): string
-    {
-        $resident = $letter->resident;
-        $letterType = $letter->letterType;
-        $fields = $letter->fieldValues->pluck('value', 'letterField.field_key');
-
-        $content = "SURAT KETERANGAN\n";
-        $content .= "===============================\n\n";
-        $content .= "No: {$letter->reference_no}\n";
-        $content .= "Jenis: {$letterType->name}\n\n";
-        $content .= "DATA PEMOHON\n";
-        $content .= "Nama: {$resident->full_name}\n";
-        $content .= "NIK: {$resident->nik}\n";
-        $content .= 'Alamat: '.($resident->address ?? '-')."\n\n";
-
-        if ($letter->purpose) {
-            $content .= "KEPERLUAN\n";
-            $content .= "{$letter->purpose}\n\n";
-        }
-
-        if ($fields->isNotEmpty()) {
-            $content .= "DATA SURAT\n";
-            foreach ($fields as $key => $value) {
-                $content .= ucfirst(str_replace('_', ' ', $key)).": {$value}\n";
-            }
-            $content .= "\n";
-        }
-
-        $content .= "===============================\n";
-        $content .= "RT 005\n\n";
-        $content .= 'Disetujui pada: '.($letter->approved_at ? $letter->approved_at->format('d/m/Y') : '-')."\n";
-        $content .= "===============================\n";
-
-        return $content;
+        return $this->letterDocumentService->generateForLetter($letter);
     }
 
     private function generateReferenceNo(LetterType $letterType): string
