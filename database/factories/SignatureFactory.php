@@ -17,7 +17,7 @@ class SignatureFactory extends Factory
         return [
             'letter_id' => Letter::factory(),
             'signed_by' => User::factory(),
-            'signature_path' => 'signatures/' . fake()->uuid() . '.png',
+            'signature_path' => 'signatures/'.fake()->uuid().'.png',
             'signature_hash' => fake()->sha256(),
             'signed_at' => now(),
             'created_at' => now(),
