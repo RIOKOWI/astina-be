@@ -16,8 +16,8 @@ class LetterDocumentFactory extends Factory
         return [
             'letter_id' => Letter::factory(),
             'document_type' => fake()->randomElement(['generated', 'attachment', 'final']),
-            'path' => 'letter-documents/' . fake()->uuid() . '.pdf',
-            'file_name' => 'surat-' . fake()->unique()->word() . '.pdf',
+            'path' => 'letter-documents/'.fake()->uuid().'.pdf',
+            'file_name' => 'surat-'.fake()->unique()->word().'.pdf',
             'mime_type' => 'application/pdf',
             'file_size' => fake()->numberBetween(50000, 500000),
         ];
