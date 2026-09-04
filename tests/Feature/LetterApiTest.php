@@ -8,6 +8,7 @@ use App\Models\Letter;
 use App\Models\LetterApproval;
 use App\Models\LetterDocument;
 use App\Models\LetterField;
+use App\Models\LetterFieldValue;
 use App\Models\LetterType;
 use App\Models\Resident;
 use App\Models\Role;
@@ -293,6 +294,7 @@ class LetterApiTest extends TestCase
     public function test_rt_can_approve_submitted_letter(): void
     {
         Queue::fake();
+
         $letter = Letter::factory()->submitted()->create([
             'resident_id' => $this->resident->id,
             'letter_type_id' => $this->letterType->id,
@@ -302,16 +304,21 @@ class LetterApiTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.status', 'approved');
+            ->assertJsonPath('data.status', 'completed')
+            ->assertJsonPath('message', 'Surat berhasil disetujui dan dokumen telah dibuat.');
 
         $this->assertDatabaseHas('letters', [
             'id' => $letter->id,
-            'status' => 'approved',
+            'status' => 'completed',
         ]);
         $this->assertDatabaseHas('letter_approvals', [
             'letter_id' => $letter->id,
             'approved_by' => $this->rtUser->id,
             'action' => 'approved',
+        ]);
+        $this->assertDatabaseHas('letter_documents', [
+            'letter_id' => $letter->id,
+            'document_type' => 'final',
         ]);
     }
 
@@ -325,6 +332,37 @@ class LetterApiTest extends TestCase
         $approval = LetterApproval::where('letter_id', $letter->id)->first();
         $this->assertNotNull($approval->acted_at);
         $this->assertNotNull($approval->created_at);
+    }
+
+    public function test_approve_auto_generates_document_and_marks_completed(): void
+    {
+        Queue::fake();
+
+        $letter = Letter::factory()->submitted()->create([
+            'resident_id' => $this->resident->id,
+            'letter_type_id' => $this->letterType->id,
+            'purpose' => 'Membuat KTP',
+        ]);
+        LetterFieldValue::create([
+            'letter_id' => $letter->id,
+            'letter_field_id' => $this->requiredField->id,
+            'value' => 'Membuat KTP',
+        ]);
+
+        $response = $this->actingAs($this->rtUser)->postJson("/api/v1/letters/{$letter->id}/approve");
+
+        $response->assertOk()
+            ->assertJsonPath('data.status', 'completed');
+
+        $this->assertDatabaseHas('letter_documents', [
+            'letter_id' => $letter->id,
+            'document_type' => 'final',
+        ]);
+
+        $doc = LetterDocument::where('letter_id', $letter->id)->first();
+        $this->assertNotNull($doc);
+        $this->assertEquals('application/vnd.openxmlformats-officedocument.wordprocessingml.document', $doc->mime_type);
+        $this->assertGreaterThan(0, $doc->file_size);
     }
 
     public function test_duplicate_approve_returns_409(): void
