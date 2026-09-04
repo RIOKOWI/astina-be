@@ -17,7 +17,7 @@ class StampFactory extends Factory
         return [
             'letter_id' => Letter::factory(),
             'stamped_by' => User::factory(),
-            'stamp_path' => 'stamps/' . fake()->uuid() . '.png',
+            'stamp_path' => 'stamps/'.fake()->uuid().'.png',
             'stamped_at' => now(),
             'created_at' => now(),
         ];
