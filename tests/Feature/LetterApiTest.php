@@ -15,10 +15,13 @@ use App\Models\Role;
 use App\Models\Signature;
 use App\Models\Stamp;
 use App\Models\User;
+use App\Services\LetterDocumentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\File;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class LetterApiTest extends TestCase
@@ -40,6 +43,56 @@ class LetterApiTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Mock LetterDocumentService so tests don't require DOMPDF/font rendering
+        $this->app->bind(LetterDocumentService::class, function () {
+            return new class extends LetterDocumentService
+            {
+                public function generateForLetter(Letter $letter): LetterDocument
+                {
+                    $workDir = storage_path('framework/tmp/letters/'.(Str::uuid()->toString()));
+                    mkdir($workDir, 0755, true);
+
+                    try {
+                        // Create minimal valid PDF directly (no DOMPDF needed in tests)
+                        $pdfPath = $workDir.'/output.pdf';
+                        file_put_contents($pdfPath, "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/MediaBox[0 0 595 842]/Parent 2 0 R>>endobj xref 0 4\n0000000000 65535 f\n0000000015 00000 n\n0000000068 00000 n\n0000000125 00000 n\ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n210\n%%EOF");
+
+                        $filename = $letter->reference_no.'.pdf';
+                        $dir = config('letters.generated_path').'/'.$letter->id;
+                        Storage::disk('private')->putFileAs($dir, new File($pdfPath), $filename);
+                        $storedPath = $dir.'/'.$filename;
+                        $fileSize = Storage::disk('private')->size($storedPath);
+
+                        $document = LetterDocument::create([
+                            'letter_id' => $letter->id,
+                            'document_type' => 'final',
+                            'path' => $storedPath,
+                            'file_name' => $letter->reference_no.'.pdf',
+                            'mime_type' => 'application/pdf',
+                            'file_size' => $fileSize,
+                        ]);
+                    } finally {
+                        if (is_dir($workDir)) {
+                            $files2 = new \RecursiveIteratorIterator(
+                                new \RecursiveDirectoryIterator($workDir, \RecursiveDirectoryIterator::SKIP_DOTS),
+                                \RecursiveIteratorIterator::CHILD_FIRST
+                            );
+                            foreach ($files2 as $f) {
+                                if ($f->isDir()) {
+                                    rmdir($f->getRealPath());
+                                } else {
+                                    unlink($f->getRealPath());
+                                }
+                            }
+                            rmdir($workDir);
+                        }
+                    }
+
+                    return $document;
+                }
+            };
+        });
 
         $rtRole = Role::create(['name' => 'RT', 'code' => 'rt']);
         $wargaRole = Role::create(['name' => 'Warga', 'code' => 'warga']);
@@ -361,7 +414,8 @@ class LetterApiTest extends TestCase
 
         $doc = LetterDocument::where('letter_id', $letter->id)->first();
         $this->assertNotNull($doc);
-        $this->assertEquals('application/vnd.openxmlformats-officedocument.wordprocessingml.document', $doc->mime_type);
+        $this->assertEquals('application/pdf', $doc->mime_type);
+        $this->assertStringEndsWith('.pdf', $doc->file_name);
         $this->assertGreaterThan(0, $doc->file_size);
     }
 
@@ -607,14 +661,16 @@ class LetterApiTest extends TestCase
 
     public function test_owner_can_download_document(): void
     {
-        Storage::fake('public');
+        Storage::fake('private');
         $letter = Letter::factory()->completed()->create(['resident_id' => $this->resident->id]);
         LetterDocument::factory()->create([
             'letter_id' => $letter->id,
             'document_type' => 'final',
-            'path' => 'letter-documents/test.pdf',
+            'path' => 'letters/generated/test.pdf',
+            'mime_type' => 'application/pdf',
+            'file_size' => 1024,
         ]);
-        Storage::disk('public')->put('letter-documents/test.pdf', 'PDF content');
+        Storage::disk('private')->put('letters/generated/test.pdf', 'PDF content');
 
         $response = $this->actingAs($this->wargaUser)->getJson("/api/v1/letters/{$letter->id}/document");
 
@@ -627,7 +683,7 @@ class LetterApiTest extends TestCase
         LetterDocument::factory()->create([
             'letter_id' => $letter->id,
             'document_type' => 'final',
-            'path' => 'letter-documents/test.pdf',
+            'path' => 'letters/generated/test.pdf',
         ]);
 
         $response = $this->actingAs($this->wargaUser)->getJson("/api/v1/letters/{$letter->id}/document");
