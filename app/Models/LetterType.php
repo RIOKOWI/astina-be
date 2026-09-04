@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class LetterType extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'code',
         'name',
