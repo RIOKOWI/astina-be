@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class FinancialTransaction extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'created_by',
         'payment_id',
