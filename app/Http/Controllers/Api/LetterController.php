@@ -199,7 +199,7 @@ class LetterController extends Controller
     {
         $document = $this->letterService->downloadDocument($letter, $request->user());
 
-        if (! Storage::disk('public')->exists($document->path)) {
+        if (! Storage::disk('private')->exists($document->path)) {
             return response()->json([
                 'success' => false,
                 'message' => 'File tidak ditemukan.',
@@ -208,10 +208,18 @@ class LetterController extends Controller
             ], 404);
         }
 
-        return Storage::disk('public')->download(
-            $document->path,
-            $document->file_name,
-            ['Content-Type' => $document->mime_type],
+        $stream = Storage::disk('private')->readStream($document->path);
+
+        return response()->stream(
+            function () use ($stream) {
+                fpassthru($stream);
+            },
+            200,
+            [
+                'Content-Type' => $document->mime_type,
+                'Content-Disposition' => 'attachment; filename="'.$document->file_name.'"',
+                'Content-Length' => $document->file_size,
+            ]
         );
     }
 }

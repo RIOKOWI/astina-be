@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class LetterFieldValue extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'letter_id',
         'letter_field_id',
