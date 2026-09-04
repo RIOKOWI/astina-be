@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class SosAlert extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'triggered_by',
         'latitude',
