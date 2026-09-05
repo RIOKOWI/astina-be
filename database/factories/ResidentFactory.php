@@ -22,6 +22,7 @@ class ResidentFactory extends Factory
             'religion' => fake()->randomElement(['islam', 'kristen', 'katolik', 'hindu', 'buddha', 'khonghucu']),
             'marital_status' => fake()->randomElement(['single', 'married', 'divorced', 'widowed']),
             'occupation' => fake()->jobTitle(),
+            'last_education' => fake()->randomElement(['SMA', 'SMK', 'D3', 'S1', 'S2', null]),
             'phone' => fake()->numerify('08##########'),
             'email' => fake()->safeEmail(),
             'status' => 'active',
