@@ -32,4 +32,24 @@ class HouseholdService
             }])
             ->first();
     }
+
+    public function update(Household $household, array $data): Household
+    {
+        $oldNoKk = $household->no_kk;
+        $household->update($data);
+
+        // Mirror no_kk to current resident_household members
+        if (isset($data['no_kk']) && $data['no_kk'] !== $oldNoKk) {
+            $memberIds = $household->residents()
+                ->wherePivot('is_current', true)
+                ->wherePivotNull('left_at')
+                ->pluck('residents.id');
+
+            Resident::whereIn('id', $memberIds)->update(['no_kk' => $data['no_kk']]);
+        }
+
+        return $household->load(['headResident', 'residents' => function ($q) {
+            $q->wherePivot('is_current', true);
+        }]);
+    }
 }
