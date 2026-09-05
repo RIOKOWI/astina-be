@@ -65,15 +65,13 @@ class LetterDocumentService
         $fieldValues = $letter->fieldValues->keyBy(fn ($fv) => $fv->letterField->field_key);
 
         // Urutan & label harus sama dengan tabel identitas di template DOCX.
-        // "Pendidikan Terakhir" tidak punya kolom di tabel residents, jadi
-        // dibiarkan kosong (titik-titik) seperti form aslinya.
         $fields = [
             ['label' => 'Nama', 'value' => $resident->full_name ?? ''],
             ['label' => 'Jenis Kelamin', 'value' => $this->mapGender($resident->gender ?? '')],
             ['label' => 'Tempat, Tgl. Lahir', 'value' => $this->birthInfo($resident)],
             ['label' => 'Agama', 'value' => $this->titleCase($resident->religion ?? '')],
             ['label' => 'Pekerjaan', 'value' => $resident->occupation ?? ''],
-            ['label' => 'Pendidikan Terakhir', 'value' => ''],
+            ['label' => 'Pendidikan Terakhir', 'value' => $resident->last_education ?? ''],
             ['label' => 'Status Perkawinan', 'value' => $this->mapMaritalStatus($resident->marital_status ?? '')],
         ];
 
