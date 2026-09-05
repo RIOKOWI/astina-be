@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Household\UpdateHouseholdRequest;
 use App\Http\Resources\Household\HouseholdResource;
 use App\Models\Household;
 use App\Services\HouseholdService;
@@ -46,6 +47,22 @@ class HouseholdController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Data keluarga berhasil diambil.',
+            'data' => new HouseholdResource($household),
+            'meta' => null,
+        ]);
+    }
+
+    public function update(UpdateHouseholdRequest $request, Household $household): JsonResponse
+    {
+        if (! auth()->user()->hasRole('rt')) {
+            abort(403, 'Anda tidak memiliki akses untuk mengubah data keluarga.');
+        }
+
+        $household = $this->householdService->update($household, $request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data keluarga berhasil diperbarui.',
             'data' => new HouseholdResource($household),
             'meta' => null,
         ]);
