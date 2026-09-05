@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\UpdateMyAccountRequest;
 use App\Http\Resources\Auth\UserResource;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -45,6 +48,33 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Data pengguna berhasil diambil.',
             'data' => new UserResource($user),
+            'meta' => null,
+        ]);
+    }
+
+    public function updateMe(UpdateMyAccountRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $user = $this->authService->updateAccount($user, $request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Akun berhasil diperbarui.',
+            'data' => new UserResource($user),
+            'meta' => null,
+        ]);
+    }
+
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $this->authService->changePassword($user, $request->password);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password berhasil diubah. Silakan login ulang.',
+            'data' => null,
             'meta' => null,
         ]);
     }
