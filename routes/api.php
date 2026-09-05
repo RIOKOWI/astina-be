@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ResidentController;
 use App\Http\Controllers\Api\SosController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -27,12 +28,15 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware('auth:sanctum')->group(function () {
             Route::get('/me', [AuthController::class, 'me']);
+            Route::patch('/me', [AuthController::class, 'updateMe']);
+            Route::patch('/password', [AuthController::class, 'changePassword']);
             Route::post('/logout', [AuthController::class, 'logout']);
         });
     });
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me/resident', [MeController::class, 'resident']);
+        Route::patch('/me/resident', [MeController::class, 'updateResident']);
         Route::get('/me/household', [MeController::class, 'household']);
         Route::get('/me/documents', [MeController::class, 'documents']);
         Route::post('/me/documents/ktp', [MeController::class, 'uploadKtp']);
@@ -40,9 +44,16 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/residents', [ResidentController::class, 'index']);
         Route::get('/residents/{resident}', [ResidentController::class, 'show']);
+        Route::patch('/residents/{resident}', [ResidentController::class, 'update']);
 
         Route::get('/households', [HouseholdController::class, 'index']);
         Route::get('/households/{household}', [HouseholdController::class, 'show']);
+        Route::patch('/households/{household}', [HouseholdController::class, 'update']);
+
+        Route::get('/users', [UserController::class, 'index']);
+        Route::get('/users/{user}', [UserController::class, 'show']);
+        Route::patch('/users/{user}', [UserController::class, 'update']);
+        Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
 
         Route::post('/device-tokens', [DeviceTokenController::class, 'store']);
         Route::delete('/device-tokens/{token}', [DeviceTokenController::class, 'destroy']);
