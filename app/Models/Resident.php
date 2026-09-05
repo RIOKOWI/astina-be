@@ -23,6 +23,7 @@ class Resident extends Model
         'religion',
         'marital_status',
         'occupation',
+        'last_education',
         'phone',
         'email',
         'status',
