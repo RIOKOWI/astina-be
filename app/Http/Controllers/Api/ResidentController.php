@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Resident\ResidentIndexRequest;
-use App\Http\Resources\Resident\ResidentResource;
+use App\Http\Requests\Resident\UpdateResidentRequest;
+use App\Http\Resources\Resident\ResidentAdminResource;
 use App\Http\Resources\Resident\ResidentSummaryResource;
 use App\Models\Resident;
 use App\Services\ResidentService;
@@ -48,10 +49,28 @@ class ResidentController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk melihat data warga.');
         }
 
+        $resident = $this->residentService->getDetail($resident);
+
         return response()->json([
             'success' => true,
             'message' => 'Data warga berhasil diambil.',
-            'data' => new ResidentResource($resident),
+            'data' => new ResidentAdminResource($resident),
+            'meta' => null,
+        ]);
+    }
+
+    public function update(UpdateResidentRequest $request, Resident $resident): JsonResponse
+    {
+        if (! auth()->user()->hasRole('rt')) {
+            abort(403, 'Anda tidak memiliki akses untuk mengubah data warga.');
+        }
+
+        $resident = $this->residentService->updateResident($resident, $request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data warga berhasil diperbarui.',
+            'data' => new ResidentAdminResource($resident),
             'meta' => null,
         ]);
     }
