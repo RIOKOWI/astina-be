@@ -28,7 +28,9 @@ class ResidentService
 
     public function getDetail(Resident $resident): Resident
     {
-        return $resident;
+        return $resident->load(['user.roles', 'households' => function ($q) {
+            $q->wherePivot('is_current', true);
+        }]);
     }
 
     public function getAuthenticatedResident(int $userId): ?Resident
@@ -36,5 +38,28 @@ class ResidentService
         return Resident::whereHas('user', function (Builder $q) use ($userId) {
             $q->where('id', $userId);
         })->first();
+    }
+
+    public function updateOwnResident(Resident $resident, array $data): Resident
+    {
+        $resident->update($data);
+
+        return $resident;
+    }
+
+    public function updateResident(Resident $resident, array $data): Resident
+    {
+        // Only sync phone/email if resident has no linked user account
+        if ((isset($data['phone']) || isset($data['email'])) && ! $resident->user) {
+            $resident->update($data);
+        } else {
+            // Filter out phone/email if user has account (they're managed via UserService)
+            $safeData = collect($data)->except(['phone', 'email'])->toArray();
+            $resident->update($safeData);
+        }
+
+        return $resident->load(['user.roles', 'households' => function ($q) {
+            $q->wherePivot('is_current', true);
+        }]);
     }
 }
