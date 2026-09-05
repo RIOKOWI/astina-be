@@ -18,6 +18,7 @@ class ResidentResource extends JsonResource
             'gender' => $this->gender,
             'religion' => $this->religion,
             'occupation' => $this->occupation,
+            'last_education' => $this->last_education,
             'marital_status' => $this->marital_status,
             'phone' => $this->phone,
             'email' => $this->email,
