@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Resident\UpdateMyResidentRequest;
 use App\Http\Requests\Resident\UploadKkRequest;
 use App\Http\Requests\Resident\UploadKtpRequest;
 use App\Http\Resources\Household\HouseholdResource;
@@ -38,6 +39,30 @@ class MeController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Data warga berhasil diambil.',
+            'data' => new ResidentResource($resident),
+            'meta' => null,
+        ]);
+    }
+
+    public function updateResident(UpdateMyResidentRequest $request): JsonResponse
+    {
+        $user = auth()->user();
+        $resident = $this->residentService->getAuthenticatedResident($user->id);
+
+        if (! $resident) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda belum memiliki data resident.',
+                'errors' => null,
+                'data' => null,
+            ], 422);
+        }
+
+        $resident = $this->residentService->updateOwnResident($resident, $request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data warga berhasil diperbarui.',
             'data' => new ResidentResource($resident),
             'meta' => null,
         ]);
