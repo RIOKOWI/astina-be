@@ -41,10 +41,13 @@ Route::prefix('v1')->group(function () {
         Route::get('/me/documents', [MeController::class, 'documents']);
         Route::post('/me/documents/ktp', [MeController::class, 'uploadKtp']);
         Route::post('/me/documents/kk', [MeController::class, 'uploadKk']);
+        Route::get('/me/documents/ktp/file', [MeController::class, 'downloadKtp']);
+        Route::get('/me/documents/kk/file', [MeController::class, 'downloadKk']);
 
         Route::get('/residents', [ResidentController::class, 'index']);
         Route::get('/residents/{resident}', [ResidentController::class, 'show']);
         Route::patch('/residents/{resident}', [ResidentController::class, 'update']);
+        Route::post('/residents/{resident}/account', [UserController::class, 'storeForResident']);
 
         Route::get('/households', [HouseholdController::class, 'index']);
         Route::get('/households/{household}', [HouseholdController::class, 'show']);
