@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\Resident;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UserService
 {
@@ -79,6 +82,55 @@ class UserService
             $user->deviceTokens()->update(['revoked_at' => now()]);
 
             return $user;
+        });
+    }
+
+    public function createResidentAccount(Resident $resident, array $data): User
+    {
+        return DB::transaction(function () use ($resident, $data) {
+            $locked = Resident::where('id', $resident->id)->lockForUpdate()->first();
+
+            if ($locked->status !== 'active') {
+                abort(409, 'Akun hanya dapat dibuat untuk warga dengan status aktif.');
+            }
+
+            if ($locked->user) {
+                if ($locked->user->is_active) {
+                    abort(409, 'Warga ini sudah memiliki akun.');
+                }
+                abort(409, 'Warga ini sudah memiliki akun yang tidak aktif. Aktifkan kembali akun yang ada.');
+            }
+
+            $wargaRole = Role::where('code', 'warga')->first();
+            if (! $wargaRole) {
+                Log::error('Role warga tidak ditemukan saat provisioning akun resident', [
+                    'resident_id' => $resident->id,
+                ]);
+                abort(500, 'Konfigurasi sistem tidak valid.');
+            }
+
+            $user = User::create([
+                'resident_id' => $resident->id,
+                'phone' => $data['phone'],
+                'email' => $data['email'] ?? null,
+                'password' => $data['password'],
+                'is_active' => true,
+            ]);
+
+            $user->roles()->attach($wargaRole->id);
+
+            $resident->update([
+                'phone' => $data['phone'],
+                'email' => $data['email'] ?? null,
+            ]);
+
+            Log::info('Akun resident berhasil dibuat', [
+                'user_id' => $user->id,
+                'resident_id' => $resident->id,
+                'created_by' => auth()->id(),
+            ]);
+
+            return $user->load(['roles', 'resident']);
         });
     }
 }
