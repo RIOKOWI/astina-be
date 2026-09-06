@@ -129,6 +129,13 @@ class DatabaseStructureTest extends TestCase
         $this->assertTrue(method_exists($alert, 'responses'));
     }
 
+    public function test_users_resident_id_is_unique(): void
+    {
+        $indexes = DB::select('SHOW INDEX FROM users WHERE Column_name = "resident_id"');
+        $uniqueIndexes = array_filter($indexes, fn ($idx) => (int) $idx->Non_unique === 0);
+        $this->assertNotEmpty($uniqueIndexes, 'users.resident_id should have a UNIQUE constraint');
+    }
+
     public function test_activity_reads_unique_constraint(): void
     {
         $columns = Schema::getColumnListing('activity_reads');
