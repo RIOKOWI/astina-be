@@ -13,6 +13,8 @@ use App\Services\HouseholdService;
 use App\Services\ResidentDocumentService;
 use App\Services\ResidentService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MeController extends Controller
 {
@@ -171,5 +173,49 @@ class MeController extends Controller
             'data' => $result,
             'meta' => null,
         ], 200);
+    }
+
+    public function downloadKtp(): StreamedResponse
+    {
+        $user = auth()->user();
+        $media = $this->documentService->downloadKtp($user);
+
+        $stream = Storage::disk('private')->readStream($media->path);
+
+        return response()->stream(
+            function () use ($stream) {
+                fpassthru($stream);
+            },
+            200,
+            [
+                'Content-Type' => $media->mime_type,
+                'Content-Disposition' => 'inline; filename="'.$media->file_name.'"',
+                'Content-Length' => $media->file_size,
+                'Cache-Control' => 'private, no-store',
+                'X-Content-Type-Options' => 'nosniff',
+            ]
+        );
+    }
+
+    public function downloadKk(): StreamedResponse
+    {
+        $user = auth()->user();
+        $media = $this->documentService->downloadKk($user);
+
+        $stream = Storage::disk('private')->readStream($media->path);
+
+        return response()->stream(
+            function () use ($stream) {
+                fpassthru($stream);
+            },
+            200,
+            [
+                'Content-Type' => $media->mime_type,
+                'Content-Disposition' => 'inline; filename="'.$media->file_name.'"',
+                'Content-Length' => $media->file_size,
+                'Cache-Control' => 'private, no-store',
+                'X-Content-Type-Options' => 'nosniff',
+            ]
+        );
     }
 }
