@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\CreateResidentAccountRequest;
 use App\Http\Requests\User\ResetUserPasswordRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Requests\User\UserIndexRequest;
 use App\Http\Resources\User\UserAdminResource;
 use App\Http\Resources\User\UserResource;
+use App\Models\Resident;
 use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
@@ -92,5 +94,17 @@ class UserController extends Controller
             'data' => null,
             'meta' => null,
         ]);
+    }
+
+    public function storeForResident(CreateResidentAccountRequest $request, Resident $resident): JsonResponse
+    {
+        $user = $this->userService->createResidentAccount($resident, $request->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Akun warga berhasil dibuat.',
+            'data' => new UserAdminResource($user),
+            'meta' => null,
+        ], 201);
     }
 }
