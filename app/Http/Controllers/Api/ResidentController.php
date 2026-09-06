@@ -27,6 +27,7 @@ class ResidentController extends Controller
         $residents = $this->residentService->getList(
             $params['search'] ?? null,
             $params['status'] ?? null,
+            $params['has_account'] ?? null,
             $params['per_page'] ?? 15,
         );
 
