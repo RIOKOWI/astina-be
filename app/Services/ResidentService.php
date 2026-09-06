@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ResidentService
 {
-    public function getList(?string $search = null, ?string $status = null, int $perPage = 15): LengthAwarePaginator
+    public function getList(?string $search = null, ?string $status = null, ?string $hasAccount = null, int $perPage = 15): LengthAwarePaginator
     {
-        $query = Resident::query();
+        $query = Resident::with(['user' => function ($q) {
+            $q->with('roles');
+        }]);
 
         if ($search) {
             $query->where(function (Builder $q) use ($search) {
@@ -21,6 +23,15 @@ class ResidentService
 
         if ($status) {
             $query->where('status', $status);
+        }
+
+        if ($hasAccount !== null) {
+            $has = in_array($hasAccount, ['1', 'true'], true);
+            if ($has) {
+                $query->whereHas('user');
+            } else {
+                $query->whereDoesntHave('user');
+            }
         }
 
         return $query->orderBy('full_name')->paginate($perPage);
