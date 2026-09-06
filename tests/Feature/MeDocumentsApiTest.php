@@ -54,7 +54,7 @@ class MeDocumentsApiTest extends TestCase
             'model_type' => Resident::class,
             'model_id' => $this->resident->id,
             'collection' => Media::COLLECTION_KTP,
-            'disk' => 'public',
+            'disk' => 'private',
             'path' => 'residents/1/documents/ktp/test.jpg',
             'file_name' => 'ktp.jpg',
             'mime_type' => 'image/jpeg',
@@ -65,7 +65,7 @@ class MeDocumentsApiTest extends TestCase
             'model_type' => Household::class,
             'model_id' => $this->household->id,
             'collection' => Media::COLLECTION_KK,
-            'disk' => 'public',
+            'disk' => 'private',
             'path' => 'households/1/documents/kk/test.jpg',
             'file_name' => 'kk.jpg',
             'mime_type' => 'image/jpeg',
@@ -148,7 +148,7 @@ class MeDocumentsApiTest extends TestCase
             'model_type' => Resident::class,
             'model_id' => $this->resident->id,
             'collection' => Media::COLLECTION_KTP,
-            'disk' => 'public',
+            'disk' => 'private',
         ]);
     }
 
@@ -182,7 +182,7 @@ class MeDocumentsApiTest extends TestCase
             'model_type' => Resident::class,
             'model_id' => $this->resident->id,
             'collection' => Media::COLLECTION_KTP,
-            'disk' => 'public',
+            'disk' => 'private',
             'path' => 'residents/1/documents/ktp/old.jpg',
             'file_name' => 'old.jpg',
             'mime_type' => 'image/jpeg',
@@ -269,7 +269,7 @@ class MeDocumentsApiTest extends TestCase
             'model_type' => Household::class,
             'model_id' => $this->household->id,
             'collection' => Media::COLLECTION_KK,
-            'disk' => 'public',
+            'disk' => 'private',
         ]);
     }
 
@@ -318,7 +318,7 @@ class MeDocumentsApiTest extends TestCase
             'model_type' => Household::class,
             'model_id' => $this->household->id,
             'collection' => Media::COLLECTION_KK,
-            'disk' => 'public',
+            'disk' => 'private',
             'path' => 'households/1/documents/kk/old.jpg',
             'file_name' => 'old.jpg',
             'mime_type' => 'image/jpeg',
