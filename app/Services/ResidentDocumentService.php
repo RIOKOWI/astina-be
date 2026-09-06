@@ -73,13 +73,13 @@ class ResidentDocumentService
             $path = "{$directory}/{$result->filename}";
 
             try {
-                Storage::disk('public')->put($path, $result->contents);
+                Storage::disk('private')->put($path, $result->contents);
 
                 $media = Media::create([
                     'model_type' => Resident::class,
                     'model_id' => $resident->id,
                     'collection' => Media::COLLECTION_KTP,
-                    'disk' => 'public',
+                    'disk' => 'private',
                     'path' => $path,
                     'file_name' => $file->getClientOriginalName(),
                     'mime_type' => $result->mimeType,
@@ -105,7 +105,7 @@ class ResidentDocumentService
 
                 return $this->formatMedia($media);
             } catch (\Throwable $e) {
-                Storage::disk('public')->delete($path);
+                Storage::disk('private')->delete($path);
                 throw $e;
             }
         });
@@ -138,13 +138,13 @@ class ResidentDocumentService
             $path = "{$directory}/{$result->filename}";
 
             try {
-                Storage::disk('public')->put($path, $result->contents);
+                Storage::disk('private')->put($path, $result->contents);
 
                 $media = Media::create([
                     'model_type' => Household::class,
                     'model_id' => $household->id,
                     'collection' => Media::COLLECTION_KK,
-                    'disk' => 'public',
+                    'disk' => 'private',
                     'path' => $path,
                     'file_name' => $file->getClientOriginalName(),
                     'mime_type' => $result->mimeType,
@@ -170,10 +170,59 @@ class ResidentDocumentService
 
                 return $this->formatMedia($media);
             } catch (\Throwable $e) {
-                Storage::disk('public')->delete($path);
+                Storage::disk('private')->delete($path);
                 throw $e;
             }
         });
+    }
+
+    public function downloadKtp(User $user): Media
+    {
+        if (! $user->hasRole('warga')) {
+            abort(403, 'Anda tidak memiliki akses ke endpoint ini.');
+        }
+
+        $resident = Resident::query()->find($user->resident_id);
+        if (! $resident) {
+            abort(404, 'Data resident tidak ditemukan.');
+        }
+
+        $ktp = $resident->media()
+            ->where('collection', Media::COLLECTION_KTP)
+            ->firstOrFail();
+
+        if ($ktp->disk !== 'private' || ! Storage::disk('private')->exists($ktp->path)) {
+            abort(404, 'File tidak ditemukan.');
+        }
+
+        return $ktp;
+    }
+
+    public function downloadKk(User $user): Media
+    {
+        if (! $user->hasRole('warga')) {
+            abort(403, 'Anda tidak memiliki akses ke endpoint ini.');
+        }
+
+        $resident = Resident::query()->find($user->resident_id);
+        if (! $resident) {
+            abort(404, 'Data resident tidak ditemukan.');
+        }
+        $household = $this->getCurrentHousehold($resident);
+
+        if (! $household) {
+            abort(404, 'Household tidak ditemukan.');
+        }
+
+        $kk = $household->media()
+            ->where('collection', Media::COLLECTION_KK)
+            ->firstOrFail();
+
+        if ($kk->disk !== 'private' || ! Storage::disk('private')->exists($kk->path)) {
+            abort(404, 'File tidak ditemukan.');
+        }
+
+        return $kk;
     }
 
     private function getCurrentHousehold(Resident $resident): ?Household
@@ -202,12 +251,13 @@ class ResidentDocumentService
 
     private function formatMedia(Media $media): array
     {
+        // Private files require authenticated download endpoint — no public URL
         return [
             'id' => $media->id,
             'file_name' => $media->file_name,
             'mime_type' => $media->mime_type,
             'file_size' => $media->file_size,
-            'url' => Storage::disk($media->disk)->url($media->path),
+            'url' => null,
         ];
     }
 }
