@@ -39,9 +39,13 @@ class ResidentService
 
     public function getDetail(Resident $resident): Resident
     {
-        return $resident->load(['user.roles', 'households' => function ($q) {
-            $q->wherePivot('is_current', true);
-        }]);
+        return $resident->load([
+            'user.roles',
+            'households' => function ($q) {
+                $q->wherePivot('is_current', true)->with('media');
+            },
+            'media',
+        ]);
     }
 
     public function getAuthenticatedResident(int $userId): ?Resident
@@ -56,6 +60,29 @@ class ResidentService
         $resident->update($data);
 
         return $resident;
+    }
+
+    public function create(array $data): Resident
+    {
+        $resident = Resident::create([
+            'nik' => $data['nik'],
+            'full_name' => $data['full_name'],
+            'birth_place' => $data['birth_place'] ?? null,
+            'birth_date' => $data['birth_date'] ?? null,
+            'gender' => $data['gender'],
+            'religion' => $data['religion'] ?? null,
+            'marital_status' => $data['marital_status'],
+            'occupation' => $data['occupation'] ?? null,
+            'last_education' => $data['last_education'] ?? null,
+            'phone' => $data['phone'] ?? null,
+            'email' => $data['email'] ?? null,
+            'status' => 'active',
+            'no_kk' => null,
+            'left_at' => null,
+            'joined_at' => $data['joined_at'] ?? now()->toDateString(),
+        ]);
+
+        return $resident->load('user');
     }
 
     public function updateResident(Resident $resident, array $data): Resident
