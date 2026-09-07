@@ -92,14 +92,27 @@ class LetterDocumentService
             ->locale('id')
             ->translatedFormat('j F Y');
 
+        // Nama RT yang menandatangani diambil dari approver (user RT yang approve)
+        $letter->loadMissing('approvals.approver');
+        $approver = $letter->approvals
+            ->where('action', 'approved')
+            ->sortByDesc('acted_at')
+            ->first()?->approver;
+        $rtSignatureName = $approver?->name ?? 'GILANG CHOIRUR R.';
+
+        // Signature & stamp menggunakan aset default RT dari config
+        $signature = $this->imageDataUriFromConfig(config('letters.default_signature'));
+        $stamp = $this->imageDataUriFromConfig(config('letters.default_stamp'));
+
         return [
             'fields' => $fields,
             'block' => $this->resolveHouseholdBlock($resident),
             'purpose' => $purpose,
             'date' => $date,
             'logo' => $this->imageDataUri(public_path('img/logo-rt.webp')),
-            'signature' => $this->imageDataUri($this->getSignaturePath($letter)),
-            'stamp' => $this->imageDataUri($this->getStampPath($letter)),
+            'signature' => $signature,
+            'stamp' => $stamp,
+            'rt_signature_name' => $rtSignatureName,
         ];
     }
 
@@ -202,45 +215,15 @@ class LetterDocumentService
         return 'data:'.$mime.';base64,'.base64_encode(file_get_contents($path));
     }
 
-    private function getSignaturePath(Letter $letter): string
+    private function imageDataUriFromConfig(?string $configPath): string
     {
-        // Tanda tangan hasil upload RT (endpoint /letters/{id}/sign) diprioritaskan.
-        $signature = $letter->signatures()->latest('id')->first();
-        if ($signature && $signature->signature_path) {
-            $diskPath = Storage::disk('private')->path($signature->signature_path);
-            if (is_file($diskPath)) {
-                return $diskPath;
-            }
+        if (! $configPath) {
+            return '';
         }
 
-        $default = config('letters.default_signature');
-        if ($default) {
-            $diskPath = Storage::disk('private')->path($default);
-            if (is_file($diskPath)) {
-                return $diskPath;
-            }
-        }
-
-        return '';
-    }
-
-    private function getStampPath(Letter $letter): string
-    {
-        // Stempel hasil upload RT (endpoint /letters/{id}/stamp) diprioritaskan.
-        $stamp = $letter->stamps()->latest('id')->first();
-        if ($stamp && $stamp->stamp_path) {
-            $diskPath = Storage::disk('private')->path($stamp->stamp_path);
-            if (is_file($diskPath)) {
-                return $diskPath;
-            }
-        }
-
-        $default = config('letters.default_stamp');
-        if ($default) {
-            $diskPath = Storage::disk('private')->path($default);
-            if (is_file($diskPath)) {
-                return $diskPath;
-            }
+        $diskPath = Storage::disk('private')->path($configPath);
+        if (is_file($diskPath)) {
+            return $this->imageDataUri($diskPath);
         }
 
         return '';
