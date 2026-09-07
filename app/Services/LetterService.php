@@ -9,15 +9,11 @@ use App\Models\LetterField;
 use App\Models\LetterFieldValue;
 use App\Models\LetterType;
 use App\Models\Resident;
-use App\Models\Signature;
-use App\Models\Stamp;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class LetterService
@@ -25,7 +21,7 @@ class LetterService
     private const VALID_TRANSITIONS = [
         'draft' => ['submitted'],
         'submitted' => ['approved', 'rejected'],
-        'approved' => ['completed'],
+        'approved' => [],
         'rejected' => [],
         'completed' => [],
     ];
@@ -162,7 +158,7 @@ class LetterService
             abort(403, 'Anda tidak memiliki akses ke surat ini.');
         }
 
-        $letter->load(['letterType', 'resident', 'fieldValues.letterField', 'approvals.approver', 'documents', 'signatures.signer', 'stamps.stamper']);
+        $letter->load(['letterType', 'resident', 'fieldValues.letterField', 'approvals.approver', 'documents']);
 
         return $letter;
     }
@@ -189,7 +185,7 @@ class LetterService
             ]);
 
             // Load relations needed for document generation
-            $letter->load(['resident', 'letterType', 'fieldValues.letterField']);
+            $letter->load(['resident', 'letterType', 'fieldValues.letterField', 'approvals.approver']);
 
             // Generate the document (uses default sign/stamp from storage)
             $this->letterDocumentService->generateForLetter($letter);
@@ -242,118 +238,6 @@ class LetterService
         $this->notifyWarga($letter, 'letter_rejected', 'Surat Ditolak', "Surat Anda ditolak. Alasan: {$reason}");
 
         return $letter->fresh()->load(['letterType', 'resident', 'fieldValues.letterField', 'approvals.approver']);
-    }
-
-    public function signLetter(Letter $letter, User $rt, UploadedFile $file): Signature
-    {
-        if ($letter->status !== 'approved') {
-            abort(409, 'Surat harus berstatus approved sebelum dapat ditandatangani.');
-        }
-
-        $hasSignature = Signature::query()->where('letter_id', $letter->id)->exists();
-        if ($hasSignature) {
-            abort(409, 'Surat sudah ditandatangani.');
-        }
-
-        $directory = "signatures/{$letter->id}";
-        $result = $this->imageService->process($file);
-        $path = "{$directory}/{$result->filename}";
-
-        try {
-            Storage::disk('public')->put($path, $result->contents);
-            $signatureHash = hash('sha256', $result->contents);
-
-            $signature = Signature::create([
-                'letter_id' => $letter->id,
-                'signed_by' => $rt->id,
-                'signature_path' => $path,
-                'signature_hash' => $signatureHash,
-                'signed_at' => now(),
-                'created_at' => now(),
-            ]);
-
-            Log::info('Letter signed', [
-                'letter_id' => $letter->id,
-                'reference_no' => $letter->reference_no,
-                'signed_by' => $rt->id,
-                'original_size' => $file->getSize(),
-                'processed_size' => $result->fileSize,
-                'processed_mime' => $result->mimeType,
-                'width' => $result->processedWidth,
-                'height' => $result->processedHeight,
-                'feature' => 'signature',
-            ]);
-
-            return $signature;
-        } catch (\Throwable $e) {
-            Storage::disk('public')->delete($path);
-            throw $e;
-        }
-    }
-
-    public function stampLetter(Letter $letter, User $rt, UploadedFile $file): Stamp
-    {
-        if ($letter->status !== 'approved') {
-            abort(409, 'Surat harus berstatus approved sebelum dapat distempel.');
-        }
-
-        $hasSignature = Signature::query()->where('letter_id', $letter->id)->exists();
-        if (! $hasSignature) {
-            abort(409, 'Surat harus ditandatangani terlebih dahulu sebelum distempel.');
-        }
-
-        $hasStamp = Stamp::query()->where('letter_id', $letter->id)->exists();
-        if ($hasStamp) {
-            abort(409, 'Surat sudah distempel.');
-        }
-
-        $directory = "stamps/{$letter->id}";
-        $result = $this->imageService->process($file);
-        $path = "{$directory}/{$result->filename}";
-
-        try {
-            Storage::disk('public')->put($path, $result->contents);
-
-            $stamp = Stamp::create([
-                'letter_id' => $letter->id,
-                'stamped_by' => $rt->id,
-                'stamp_path' => $path,
-                'stamped_at' => now(),
-                'created_at' => now(),
-            ]);
-
-            $this->notifyWarga($letter, 'letter_stamped', 'Surat Distempel', 'Surat Anda telah distempel oleh RT.');
-
-            // Check if we can complete the letter (both signed and stamped)
-            $allDone = Signature::query()->where('letter_id', $letter->id)->exists()
-                && Stamp::query()->where('letter_id', $letter->id)->exists();
-
-            if ($allDone) {
-                $letter->update(['status' => 'completed']);
-                Log::info('Letter completed', [
-                    'letter_id' => $letter->id,
-                    'reference_no' => $letter->reference_no,
-                ]);
-                $this->notifyWarga($letter, 'letter_completed', 'Surat Selesai', 'Surat Anda telah lengkap dan siap digunakan.');
-            }
-
-            Log::info('Letter stamped', [
-                'letter_id' => $letter->id,
-                'reference_no' => $letter->reference_no,
-                'stamped_by' => $rt->id,
-                'original_size' => $file->getSize(),
-                'processed_size' => $result->fileSize,
-                'processed_mime' => $result->mimeType,
-                'width' => $result->processedWidth,
-                'height' => $result->processedHeight,
-                'feature' => 'stamp',
-            ]);
-
-            return $stamp;
-        } catch (\Throwable $e) {
-            Storage::disk('public')->delete($path);
-            throw $e;
-        }
     }
 
     public function downloadDocument(Letter $letter, User $user): LetterDocument
