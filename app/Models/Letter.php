@@ -62,14 +62,4 @@ class Letter extends Model
     {
         return $this->hasMany(LetterDocument::class);
     }
-
-    public function signatures(): HasMany
-    {
-        return $this->hasMany(Signature::class);
-    }
-
-    public function stamps(): HasMany
-    {
-        return $this->hasMany(Stamp::class);
-    }
 }
