@@ -22,12 +22,13 @@ class DatabaseStructureTest extends TestCase
         $rawTables = DB::select('SHOW TABLES');
         $tables = array_map(fn ($t) => array_values((array) $t)[0], $rawTables);
         $expectedTables = [
+            'sessions',
             'roles', 'residents', 'households', 'resident_households',
             'users', 'role_user',
             'device_tokens', 'notifications',
             'activities', 'activity_attachments', 'activity_reads',
             'letter_types', 'letter_fields', 'letters', 'letter_field_values',
-            'letter_approvals', 'letter_documents', 'signatures', 'stamps',
+            'letter_approvals', 'letter_documents',
             'dues', 'due_bills', 'payments', 'payment_proofs', 'financial_transactions',
             'complaints', 'complaint_attachments', 'complaint_comments',
             'sos_alerts', 'sos_responses',
@@ -59,8 +60,6 @@ class DatabaseStructureTest extends TestCase
             'App\Models\LetterFieldValue',
             'App\Models\LetterApproval',
             'App\Models\LetterDocument',
-            'App\Models\Signature',
-            'App\Models\Stamp',
             'App\Models\Due',
             'App\Models\DueBill',
             'App\Models\Payment',
@@ -104,8 +103,6 @@ class DatabaseStructureTest extends TestCase
         $this->assertTrue(method_exists($letter, 'submitter'));
         $this->assertTrue(method_exists($letter, 'letterType'));
         $this->assertTrue(method_exists($letter, 'approvals'));
-        $this->assertTrue(method_exists($letter, 'signatures'));
-        $this->assertTrue(method_exists($letter, 'stamps'));
     }
 
     public function test_finance_relationships(): void
