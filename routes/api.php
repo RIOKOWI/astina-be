@@ -124,9 +124,15 @@ Route::prefix('v1')->group(function () {
         Route::post('/payments/{payment}/approve', [PaymentController::class, 'approve']);
         Route::post('/payments/{payment}/reject', [PaymentController::class, 'reject']);
 
-        // Letter Types
+        // Letter Types (RT CRUD + warga read)
         Route::get('/letter-types', [LetterTypeController::class, 'index']);
         Route::get('/letter-types/{letter_type}', [LetterTypeController::class, 'show']);
+        Route::post('/letter-types', [LetterTypeController::class, 'store']);
+        Route::put('/letter-types/{letter_type}', [LetterTypeController::class, 'update']);
+        Route::delete('/letter-types/{letter_type}', [LetterTypeController::class, 'destroy']);
+        Route::post('/letter-types/{letter_type}/fields', [LetterTypeController::class, 'storeField']);
+        Route::put('/letter-types/{letter_type}/fields/{field}', [LetterTypeController::class, 'updateField']);
+        Route::delete('/letter-types/{letter_type}/fields/{field}', [LetterTypeController::class, 'destroyField']);
 
         // My Letters (warga)
         Route::get('/my/letters', [LetterController::class, 'myLetters']);
