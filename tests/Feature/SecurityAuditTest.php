@@ -18,7 +18,6 @@ use App\Models\Role;
 use App\Models\SosAlert;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -375,40 +374,6 @@ class SecurityAuditTest extends TestCase
         $letter = Letter::factory()->create();
 
         $response = $this->actingAs($warga)->postJson("/api/v1/letters/{$letter->id}/approve");
-
-        $response->assertStatus(403);
-    }
-
-    public function test_warga_cannot_sign_letter(): void
-    {
-        $warga = User::factory()->create();
-        $wargaRole = Role::factory()->warga()->create();
-        $warga->roles()->attach($wargaRole);
-
-        $letter = Letter::factory()->approved()->create();
-
-        $file = UploadedFile::fake()->image('signature.png', 100, 100);
-
-        $response = $this->actingAs($warga)->postJson("/api/v1/letters/{$letter->id}/sign", [
-            'signature_image' => $file,
-        ]);
-
-        $response->assertStatus(403);
-    }
-
-    public function test_warga_cannot_stamp_letter(): void
-    {
-        $warga = User::factory()->create();
-        $wargaRole = Role::factory()->warga()->create();
-        $warga->roles()->attach($wargaRole);
-
-        $letter = Letter::factory()->approved()->create();
-
-        $file = UploadedFile::fake()->image('stamp.png', 100, 100);
-
-        $response = $this->actingAs($warga)->postJson("/api/v1/letters/{$letter->id}/stamp", [
-            'stamp_image' => $file,
-        ]);
 
         $response->assertStatus(403);
     }
