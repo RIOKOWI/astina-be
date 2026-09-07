@@ -44,13 +44,19 @@ Route::prefix('v1')->group(function () {
         Route::get('/me/documents/ktp/file', [MeController::class, 'downloadKtp']);
         Route::get('/me/documents/kk/file', [MeController::class, 'downloadKk']);
 
+        Route::post('/residents', [ResidentController::class, 'store']);
         Route::get('/residents', [ResidentController::class, 'index']);
         Route::get('/residents/{resident}', [ResidentController::class, 'show']);
         Route::patch('/residents/{resident}', [ResidentController::class, 'update']);
+        Route::get('/residents/{resident}/documents/ktp/file', [ResidentController::class, 'downloadKtp']);
+        Route::get('/residents/{resident}/documents/kk/file', [ResidentController::class, 'downloadKk']);
         Route::post('/residents/{resident}/account', [UserController::class, 'storeForResident']);
 
+        Route::post('/households', [HouseholdController::class, 'store']);
         Route::get('/households', [HouseholdController::class, 'index']);
         Route::get('/households/{household}', [HouseholdController::class, 'show']);
+        Route::post('/households/{household}/members', [HouseholdController::class, 'addMember']);
+        Route::delete('/households/{household}/members/{resident}', [HouseholdController::class, 'removeMember']);
         Route::patch('/households/{household}', [HouseholdController::class, 'update']);
 
         Route::get('/users', [UserController::class, 'index']);
@@ -132,8 +138,6 @@ Route::prefix('v1')->group(function () {
         Route::get('/letters/{letter}/document', [LetterController::class, 'document']);
         Route::post('/letters/{letter}/approve', [LetterController::class, 'approve']);
         Route::post('/letters/{letter}/reject', [LetterController::class, 'reject']);
-        Route::post('/letters/{letter}/sign', [LetterController::class, 'sign']);
-        Route::post('/letters/{letter}/stamp', [LetterController::class, 'stamp']);
 
         // Finance transparency
         Route::get('/finance/summary', [FinanceController::class, 'summary']);
