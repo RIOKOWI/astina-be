@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Letter\RejectLetterRequest;
-use App\Http\Requests\Letter\SignLetterRequest;
-use App\Http\Requests\Letter\StampLetterRequest;
 use App\Http\Requests\Letter\StoreLetterRequest;
 use App\Http\Resources\Letter\LetterResource;
 use App\Models\Letter;
@@ -141,55 +139,6 @@ class LetterController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Surat berhasil ditolak.',
-            'data' => new LetterResource($letter),
-            'meta' => null,
-        ]);
-    }
-
-    public function sign(SignLetterRequest $request, Letter $letter): JsonResponse
-    {
-        $user = $request->user();
-        if (! $user->hasRole('rt')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki akses.',
-                'errors' => null,
-                'data' => null,
-            ], 403);
-        }
-
-        $signature = $this->letterService->signLetter($letter, $user, $request->file('signature_image'));
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Tanda tangan berhasil disimpan.',
-            'data' => [
-                'signed_at' => $signature->signed_at?->toIso8601String(),
-                'signed_by' => $signature->signed_by,
-            ],
-            'meta' => null,
-        ], 201);
-    }
-
-    public function stamp(StampLetterRequest $request, Letter $letter): JsonResponse
-    {
-        $user = $request->user();
-        if (! $user->hasRole('rt')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda tidak memiliki akses.',
-                'errors' => null,
-                'data' => null,
-            ], 403);
-        }
-
-        $stamp = $this->letterService->stampLetter($letter, $user, $request->file('stamp_image'));
-
-        $letter->refresh()->load(['letterType', 'resident', 'fieldValues.letterField', 'approvals.approver', 'signatures.signer', 'stamps.stamper']);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Stempel berhasil disimpan.',
             'data' => new LetterResource($letter),
             'meta' => null,
         ]);
