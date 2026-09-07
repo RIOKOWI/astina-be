@@ -14,10 +14,13 @@ class LetterTypeResource extends JsonResource
             'code' => $this->code,
             'name' => $this->name,
             'description' => $this->description,
+            'is_active' => $this->is_active,
+            'created_at' => $this->when($this->relationLoaded('fields') && $request->user()?->hasRole('rt'), $this->created_at?->toIso8601String()),
             'fields' => $this->when($this->relationLoaded('fields'), function () {
                 return $this->fields
                     ->sortBy('sort_order')
                     ->map(fn ($field) => [
+                        'id' => $field->id,
                         'field_key' => $field->field_key,
                         'label' => $field->label,
                         'field_type' => $field->field_type,
