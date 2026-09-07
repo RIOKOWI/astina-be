@@ -225,6 +225,55 @@ class ResidentDocumentService
         return $kk;
     }
 
+    public function downloadKtpForResident(int $residentId): Media
+    {
+        $resident = Resident::query()->find($residentId);
+        if (! $resident) {
+            abort(404, 'Data resident tidak ditemukan.');
+        }
+
+        $ktp = $resident->media()
+            ->where('collection', Media::COLLECTION_KTP)
+            ->first();
+
+        if (! $ktp) {
+            abort(404, 'Dokumen KTP tidak ditemukan.');
+        }
+
+        if ($ktp->disk !== 'private' || ! Storage::disk('private')->exists($ktp->path)) {
+            abort(404, 'File tidak ditemukan.');
+        }
+
+        return $ktp;
+    }
+
+    public function downloadKkForResident(int $residentId): Media
+    {
+        $resident = Resident::query()->find($residentId);
+        if (! $resident) {
+            abort(404, 'Data resident tidak ditemukan.');
+        }
+
+        $household = $this->getCurrentHousehold($resident);
+        if (! $household) {
+            abort(404, 'Household tidak ditemukan.');
+        }
+
+        $kk = $household->media()
+            ->where('collection', Media::COLLECTION_KK)
+            ->first();
+
+        if (! $kk) {
+            abort(404, 'Dokumen KK tidak ditemukan.');
+        }
+
+        if ($kk->disk !== 'private' || ! Storage::disk('private')->exists($kk->path)) {
+            abort(404, 'File tidak ditemukan.');
+        }
+
+        return $kk;
+    }
+
     private function getCurrentHousehold(Resident $resident): ?Household
     {
         $households = $resident->households()
