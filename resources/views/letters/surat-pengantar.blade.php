@@ -1,7 +1,6 @@
 {{--
     Surat Pengantar RT 005 RW 016 — A5 portrait
     Visual layout ported from: docs/Letter/index.html + docs/Letter/style.css
-    Canonical reference: docs/Letter/convert3.md
 
     A5: 148mm x 210mm portrait
     Page padding: top 2mm (logo float zone), bottom 12.7mm, left/right 5mm
@@ -30,23 +29,20 @@ body {
 body {
     font-family: "Times New Roman", Times, serif;
     color: #000;
-    /* Top 2mm = logo float zone; bottom 12.7mm = page margin */
     padding: 2mm 5mm 12.7mm 5mm;
 }
+
 /* ── LETTERHEAD ── */
 .letterhead {
     position: relative;
     border-bottom: 1px solid #000;
 }
-/* Logo: width only — no height so DOMPDF auto-calculates proportional height
-   without allocating fixed vertical space. */
 .letterhead__logo {
     position: absolute;
     left: 3mm;
     top: 1.9mm;
     width: 18mm;
 }
-/* Symmetric padding → titles stay geometrically centered */
 .letterhead__titles {
     width: 100%;
     padding-left: 24mm;
@@ -64,6 +60,7 @@ body {
     font-size: 8.5pt;
     white-space: nowrap;
 }
+
 /* ── CONTENT ── */
 .content {
     font-size: 11.5pt;
@@ -171,12 +168,18 @@ body {
     white-space: nowrap;
 }
 .slot {
-    /* stamp + sign stack vertically, no extra space */
+    position: relative;
 }
 .stamp {
     display: block;
     max-width: 22mm;
     max-height: 22mm;
+    position: absolute;
+    bottom: 8mm;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.9;
+    z-index: 10;
 }
 .sign {
     display: block;
@@ -202,9 +205,8 @@ body {
 </header>
 <section class="content">
 <p class="opening">
-Yang bertanda tangan di bawah ini Ketua RT.005 RW.016 Perum Kuttobufumi 7
-Astina Kelurahan Sukatani Kecamatan Rajeg Kabupaten Tangerang,menerangkan
-bahwa&nbsp;:
+Yang bertanda tangan di bawah ini Ketua RT.005 RW.016 Perum Kuttensorflow 7
+Astina Kelurahan Sukatani Kecamatan Rajeg Kabupaten Tangerang dengan ini :
 </p>
 <table class="identity" aria-label="Data warga">
 <tbody>
@@ -222,7 +224,7 @@ bahwa&nbsp;:
 <td>Alamat Sekarang</td>
 <td>:</td>
 <td>
-Perum Kuttobufumi 7 Astina Blok {{ $block }}<br>
+Perum Kuttensorflow 7 Astina Blok {{ $block }}<br>
 Kelurahan Sukatani Kec. Rajeg Kab. Tangerang.
 <span class="dotline"></span>
 </td>
@@ -230,12 +232,11 @@ Kelurahan Sukatani Kec. Rajeg Kab. Tangerang.
 </tbody>
 </table>
 <p class="purpose">
-Adalah benar penduduk/warga kami yang berturut tinggal pada alamat tersebut di
-atas. Surat pengantar ini diberikan untuk keperluan&nbsp;{{ $purpose }}<span class="inline-dots"></span>
+Adalah benar penduduk/warga kami dan Surat ini dibuat dengan keterangan :
+{{ $purpose }}<span class="inline-dots"></span>
 </p>
 <p class="closing">
-Demikian surat pengantar ini dibuat untuk diketahui dan dipergunakan
-sebagaimana mestinya.
+Demikian surat pengantar ini dibuat untuk dapat dipergunakan sebagaimana mestinya.
 </p>
 <div class="date-row">
 <span class="date-loc">Sukatani,</span>
@@ -249,12 +250,12 @@ sebagaimana mestinya.
 </div>
 <div class="signature signature--rt">
 <div>&nbsp;</div>
-<div>Ketua RT. 005</div>
+<div>Ketua RT. 005 RW. 016</div>
 <div class="slot">
 @if ($stamp)<img class="stamp" src="{{ $stamp }}" alt="">@endif
 @if ($signature)<img class="sign" src="{{ $signature }}" alt="">@endif
 </div>
-<div class="signature__name">GILANG CHOIRUR R.</div>
+<div class="signature__name">{{ $rt_signature_name ?: 'GILANG CHOIRUR R.' }}</div>
 </div>
 </div>
 </section>
