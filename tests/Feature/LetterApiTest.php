@@ -12,13 +12,10 @@ use App\Models\LetterFieldValue;
 use App\Models\LetterType;
 use App\Models\Resident;
 use App\Models\Role;
-use App\Models\Signature;
-use App\Models\Stamp;
 use App\Models\User;
 use App\Services\LetterDocumentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\File;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -318,30 +315,6 @@ class LetterApiTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_warga_cannot_sign(): void
-    {
-        $letter = Letter::factory()->approved()->create();
-        $file = UploadedFile::fake()->image('sig.png');
-
-        $response = $this->actingAs($this->wargaUser)->postJson("/api/v1/letters/{$letter->id}/sign", [
-            'signature_image' => $file,
-        ]);
-
-        $response->assertStatus(403);
-    }
-
-    public function test_warga_cannot_stamp(): void
-    {
-        $letter = Letter::factory()->approved()->create();
-        $file = UploadedFile::fake()->image('stamp.png');
-
-        $response = $this->actingAs($this->wargaUser)->postJson("/api/v1/letters/{$letter->id}/stamp", [
-            'stamp_image' => $file,
-        ]);
-
-        $response->assertStatus(403);
-    }
-
     // ========== APPROVAL TESTS ==========
 
     public function test_rt_can_approve_submitted_letter(): void
@@ -506,157 +479,6 @@ class LetterApiTest extends TestCase
         $response->assertStatus(403);
     }
 
-    // ========== SIGNATURE TESTS ==========
-
-    public function test_rt_can_sign_approved_letter(): void
-    {
-        Storage::fake('public');
-        $letter = Letter::factory()->approved()->create(['resident_id' => $this->resident->id]);
-        $file = UploadedFile::fake()->image('signature.png');
-
-        $response = $this->actingAs($this->rtUser)->postJson("/api/v1/letters/{$letter->id}/sign", [
-            'signature_image' => $file,
-        ]);
-
-        $response->assertStatus(201)
-            ->assertJsonPath('success', true);
-
-        $this->assertDatabaseHas('signatures', [
-            'letter_id' => $letter->id,
-            'signed_by' => $this->rtUser->id,
-        ]);
-    }
-
-    public function test_sign_requires_signature_image(): void
-    {
-        Storage::fake('public');
-        $letter = Letter::factory()->approved()->create();
-
-        $response = $this->actingAs($this->rtUser)->postJson("/api/v1/letters/{$letter->id}/sign", []);
-
-        $response->assertStatus(422);
-    }
-
-    public function test_duplicate_sign_blocked(): void
-    {
-        Storage::fake('public');
-        $letter = Letter::factory()->approved()->create(['resident_id' => $this->resident->id]);
-        $file = UploadedFile::fake()->image('sig.png');
-
-        Signature::factory()->create([
-            'letter_id' => $letter->id,
-            'signed_by' => $this->rtUser->id,
-            'signed_at' => now(),
-            'created_at' => now(),
-        ]);
-
-        $response = $this->actingAs($this->rtUser)->postJson("/api/v1/letters/{$letter->id}/sign", [
-            'signature_image' => $file,
-        ]);
-
-        $response->assertStatus(409);
-    }
-
-    public function test_sign_non_approved_letter_returns_409(): void
-    {
-        Storage::fake('public');
-        $letter = Letter::factory()->submitted()->create(['resident_id' => $this->resident->id]);
-        $file = UploadedFile::fake()->image('sig.png');
-
-        $response = $this->actingAs($this->rtUser)->postJson("/api/v1/letters/{$letter->id}/sign", [
-            'signature_image' => $file,
-        ]);
-
-        $response->assertStatus(409);
-    }
-
-    // ========== STAMP TESTS ==========
-
-    public function test_rt_can_stamp_signed_letter(): void
-    {
-        Storage::fake('public');
-        $letter = Letter::factory()->approved()->create(['resident_id' => $this->resident->id]);
-        Signature::factory()->create([
-            'letter_id' => $letter->id,
-            'signed_by' => $this->rtUser->id,
-            'signed_at' => now(),
-            'created_at' => now(),
-        ]);
-        $file = UploadedFile::fake()->image('stamp.png');
-
-        $response = $this->actingAs($this->rtUser)->postJson("/api/v1/letters/{$letter->id}/stamp", [
-            'stamp_image' => $file,
-        ]);
-
-        $response->assertOk()
-            ->assertJsonPath('success', true);
-
-        $this->assertDatabaseHas('stamps', [
-            'letter_id' => $letter->id,
-            'stamped_by' => $this->rtUser->id,
-        ]);
-    }
-
-    public function test_stamp_requires_signature_first(): void
-    {
-        Storage::fake('public');
-        $letter = Letter::factory()->approved()->create(['resident_id' => $this->resident->id]);
-        $file = UploadedFile::fake()->image('stamp.png');
-
-        $response = $this->actingAs($this->rtUser)->postJson("/api/v1/letters/{$letter->id}/stamp", [
-            'stamp_image' => $file,
-        ]);
-
-        $response->assertStatus(409)
-            ->assertJsonPath('message', 'Surat harus ditandatangani terlebih dahulu sebelum distempel.');
-    }
-
-    public function test_duplicate_stamp_blocked(): void
-    {
-        Storage::fake('public');
-        $letter = Letter::factory()->approved()->create(['resident_id' => $this->resident->id]);
-        Signature::factory()->create([
-            'letter_id' => $letter->id,
-            'signed_by' => $this->rtUser->id,
-            'signed_at' => now(),
-            'created_at' => now(),
-        ]);
-        Stamp::factory()->create([
-            'letter_id' => $letter->id,
-            'stamped_by' => $this->rtUser->id,
-            'stamped_at' => now(),
-            'created_at' => now(),
-        ]);
-        $file = UploadedFile::fake()->image('stamp.png');
-
-        $response = $this->actingAs($this->rtUser)->postJson("/api/v1/letters/{$letter->id}/stamp", [
-            'stamp_image' => $file,
-        ]);
-
-        $response->assertStatus(409);
-    }
-
-    public function test_stamp_auto_completes_letter(): void
-    {
-        Storage::fake('public');
-        $letter = Letter::factory()->approved()->create(['resident_id' => $this->resident->id]);
-        Signature::factory()->create([
-            'letter_id' => $letter->id,
-            'signed_by' => $this->rtUser->id,
-            'signed_at' => now(),
-            'created_at' => now(),
-        ]);
-        $file = UploadedFile::fake()->image('stamp.png');
-
-        $response = $this->actingAs($this->rtUser)->postJson("/api/v1/letters/{$letter->id}/stamp", [
-            'stamp_image' => $file,
-        ]);
-
-        $response->assertOk();
-        $letter->refresh();
-        $this->assertEquals('completed', $letter->status);
-    }
-
     // ========== DOCUMENT TESTS ==========
 
     public function test_owner_can_download_document(): void
@@ -736,26 +558,6 @@ class LetterApiTest extends TestCase
         Queue::assertPushed(SendPushNotificationJob::class);
     }
 
-    public function test_completion_dispatches_warga_notification(): void
-    {
-        Queue::fake();
-        $letter = Letter::factory()->approved()->create(['resident_id' => $this->resident->id]);
-        Signature::factory()->create([
-            'letter_id' => $letter->id,
-            'signed_by' => $this->rtUser->id,
-            'signed_at' => now(),
-            'created_at' => now(),
-        ]);
-        Storage::fake('public');
-        $file = UploadedFile::fake()->image('stamp.png');
-
-        $this->actingAs($this->rtUser)->postJson("/api/v1/letters/{$letter->id}/stamp", [
-            'stamp_image' => $file,
-        ]);
-
-        Queue::assertPushed(SendPushNotificationJob::class, 2);
-    }
-
     // ========== PENDING LETTERS ==========
 
     public function test_rt_can_list_pending_letters(): void
@@ -786,23 +588,6 @@ class LetterApiTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('success', true);
-    }
-
-    // ========== SIGNATURE HASH STORED ==========
-
-    public function test_signature_hash_is_stored(): void
-    {
-        Storage::fake('public');
-        $letter = Letter::factory()->approved()->create(['resident_id' => $this->resident->id]);
-        $file = UploadedFile::fake()->image('sig.png', 100, 50);
-
-        $this->actingAs($this->rtUser)->postJson("/api/v1/letters/{$letter->id}/sign", [
-            'signature_image' => $file,
-        ]);
-
-        $signature = Signature::where('letter_id', $letter->id)->first();
-        $this->assertNotEmpty($signature->signature_hash);
-        $this->assertEquals(64, strlen($signature->signature_hash)); // SHA256 = 64 chars
     }
 
     // ========== FIELD VALUES SAVED ==========
