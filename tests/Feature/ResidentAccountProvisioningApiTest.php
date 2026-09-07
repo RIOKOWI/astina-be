@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Resident;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -477,7 +478,7 @@ class ResidentAccountProvisioningApiTest extends TestCase
 
     public function test_database_rejects_duplicate_resident_id(): void
     {
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
 
         $resident = Resident::factory()->create();
 
