@@ -1,263 +1,341 @@
 {{--
     Surat Pengantar RT 005 RW 016 — A5 portrait
-    Visual layout ported from: docs/Letter/index.html + docs/Letter/style.css
-
-    A5: 148mm x 210mm portrait
-    Page padding: top 2mm (logo float zone), bottom 12.7mm, left/right 5mm
-    Logo: public/img/logo-rt.webp (positioned absolutely above header)
-    Header: uses reference's symmetric-padding centered titles layout
+    Reference: docs/Letter/surat-pengantar.png
 --}}
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-<meta charset="UTF-8">
-<title>Surat Pengantar RT 005 RW 016</title>
-<style>
-@page {
-    size: A5 portrait;
-    margin: 0;
-}
-* {
-    box-sizing: border-box;
-}
-html,
-body {
-    margin: 0;
-    padding: 0;
-    background: #fff;
-}
-body {
-    font-family: "Times New Roman", Times, serif;
-    color: #000;
-    padding: 2mm 5mm 12.7mm 5mm;
-}
+    <meta charset="UTF-8">
+    <title>Surat Pengantar RT 005 RW 016</title>
+    <style>
+        @page {
+            size: A5 portrait;
+            margin: 0;
+        }
 
-/* ── LETTERHEAD ── */
-.letterhead {
-    position: relative;
-    border-bottom: 1px solid #000;
-}
-.letterhead__logo {
-    position: absolute;
-    left: 3mm;
-    top: 1.9mm;
-    width: 18mm;
-}
-.letterhead__titles {
-    width: 100%;
-    padding-left: 24mm;
-    padding-right: 24mm;
-    text-align: center;
-    font-weight: bold;
-    line-height: 1.1;
-}
-.letterhead__titles div:nth-child(1),
-.letterhead__titles div:nth-child(2) {
-    font-size: 10.5pt;
-    white-space: nowrap;
-}
-.letterhead__titles div:nth-child(3) {
-    font-size: 8.5pt;
-    white-space: nowrap;
-}
+        * {
+            box-sizing: border-box;
+        }
 
-/* ── CONTENT ── */
-.content {
-    font-size: 11.5pt;
-    line-height: 1.5;
-}
-.content p {
-    margin: 0;
-}
-.opening {
-    margin-top: 0mm !important;
-    text-align: justify;
-    text-indent: 5mm;
-}
-.identity {
-    width: 86%;
-    margin: 1mm auto 0;
-    border-collapse: collapse;
-    table-layout: fixed;
-    font-size: 11pt;
-    line-height: 1.0;
-}
-.identity td {
-    padding: 0.3mm 0 0.2mm;
-    vertical-align: top;
-}
-.identity td:nth-child(1) {
-    width: 34mm;
-    white-space: nowrap;
-}
-.identity td:nth-child(2) {
-    width: 4.2mm;
-    text-align: center;
-}
-.identity td:nth-child(3) {
-    width: auto;
-}
-.dotline {
-    display: block;
-    height: 1.8mm;
-    border-bottom: 0.55mm dotted #000;
-}
-.identity-address-row td {
-    padding-top: 0.5mm;
-    line-height: 1.1;
-}
-.purpose {
-    margin-top: 1.5mm !important;
-    text-align: justify;
-    line-height: 1.5;
-}
-.inline-dots {
-    display: inline-block;
-    width: 58mm;
-    height: 2mm;
-    vertical-align: baseline;
-    border-bottom: 0.55mm dotted #000;
-}
-.closing {
-    margin-top: 0.5mm !important;
-    text-align: justify;
-    text-indent: 5mm;
-    line-height: 1.5;
-}
-.date-row {
-    width: 50.5mm;
-    margin: 1mm 1.7mm 0 auto;
-    display: flex;
-    justify-content: space-between;
-    font-size: 11.5pt;
-    line-height: 1;
-}
-.date-row .date-loc {
-    padding-left: 0;
-}
-.date-row .date-val {
-    padding-left: 12mm;
-}
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: #fff;
+        }
+
+        body {
+            font-family: "Times New Roman", Times, serif;
+            color: #000;
+            padding: 2mm 5mm 12.7mm 5mm;
+        }
+
+        /* ── LETTERHEAD ── */
+        .letterhead {
+            position: relative;
+            border-bottom: 2px solid #000;
+            padding-bottom: 2mm;
+            margin-bottom: 2mm;
+        }
+
+        .letterhead__logo {
+            position: absolute;
+            left: 12mm;
+            top: 0;
+            width: 14mm;
+        }
+
+        .letterhead__titles {
+            padding-left: 18mm;
+            text-align: center;
+        }
+
+        .letterhead__titles div:nth-child(1),
+        .letterhead__titles div:nth-child(2),
+        .letterhead__titles div:nth-child(3) {
+            font-size: 10.5pt;
+            font-weight: bold;
+            white-space: nowrap;
+            line-height: 1.15;
+        }
+
+        /* ── TITLE ── */
+        .letter-title {
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: 2mm;
+            letter-spacing: 0.3pt;
+        }
+
+        /* ── CONTENT ── */
+        .content {
+            font-size: 11pt;
+            line-height: 1.4;
+        }
+
+        .content p {
+            margin: 0;
+        }
+
+        .opening {
+            text-align: justify;
+            text-indent: 6mm;
+            line-height: 1.4;
+        }
+
+        /* ── IDENTITY TABLE ── */
+        .identity {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11pt;
+            line-height: 1.3;
+            margin-top: 1mm;
+        }
+
+        .identity td {
+            padding: 0.3mm 0 0.2mm;
+            vertical-align: top;
+        }
+
+        .identity td:nth-child(1) {
+            width: 36mm;
+            white-space: nowrap;
+        }
+
+        .identity td:nth-child(2) {
+            width: 4mm;
+            text-align: center;
+        }
+
+        .identity td:nth-child(3) {
+            width: auto;
+        }
+
+        /* ── ADDRESS ROW ── */
+
+        /* ── PURPOSE ── */
+        .purpose {
+            text-align: justify;
+            line-height: 1.4;
+            margin-top: 1mm;
+        }
+
+        .inline-dots {
+            display: inline-block;
+            width: 42mm;
+            height: 1.8mm;
+            vertical-align: baseline;
+            border-bottom: 0.6mm dotted #000;
+        }
+
+        /* ── CLOSING ── */
+        .closing {
+            text-align: justify;
+            text-indent: 6mm;
+            line-height: 1.4;
+            margin-top: 0.5mm;
+        }
+
+        /* ── DATE ── */
+        .date-row {
+            width: 100%;
+            font-size: 11pt;
+            line-height: 1.3;
+            margin-top: 2mm;
+        }
+
+        .date-row-right {
+            text-align: right;
+        }
+
+        /* ── SIGNATURES ── */
+        /* ── SIGNATURES ── */
 .signatures {
     display: table;
     width: 100%;
     table-layout: fixed;
-    margin-top: 3mm;
-    font-size: 11.5pt;
+    margin-top: 4mm;
+    font-size: 11pt;
     line-height: 1.3;
     text-align: center;
     page-break-inside: avoid;
 }
+
 .signature {
     display: table-cell;
+    position: relative;
     width: 50%;
+    height: 32mm;
     vertical-align: top;
 }
+
 .signature--rw {
-    padding-left: 5mm;
-    padding-right: 5mm;
+    padding-right: 6mm;
 }
+
 .signature--rt {
-    padding-left: 7mm;
+    padding-left: 6mm;
 }
+
+.signature__title,
+.signature__official {
+    margin: 0;
+}
+
+/*
+ * Nama diletakkan di bagian bawah area tanda tangan.
+ * Height pada .signature menghasilkan ruang kosong
+ * antara jabatan dan nama.
+ */
 .signature__name {
-    margin-top: 14mm;
-    font-size: 11.5pt;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    font-size: 11pt;
     font-weight: 700;
     text-decoration: underline;
     white-space: nowrap;
 }
-.slot {
-    position: relative;
-}
-.stamp {
-    display: block;
-    max-width: 22mm;
-    max-height: 22mm;
+
+/* Area tanda tangan dan stempel Ketua RT */
+.rt-slot {
     position: absolute;
-    bottom: 8mm;
+    top: 7mm;
     left: 50%;
     transform: translateX(-50%);
-    opacity: 0.9;
-    z-index: 10;
+    width: 30mm;
+    height: 20mm;
 }
-.sign {
-    display: block;
-    max-width: 22mm;
-    max-height: 12mm;
+
+.rt-slot__sign {
+    position: absolute;
+    top: 1mm;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20mm;
+    height: auto;
+    z-index: 1;
 }
-@media screen {
-    body {
-        background: #ddd;
-        padding: 10mm 0;
-    }
+
+.rt-slot__stamp {
+    position: absolute;
+    top: 2mm;
+    left: 50%;
+    transform: translateX(-50%) rotate(-5deg);
+    width: 22mm;
+    height: auto;
+    opacity: 0.88;
+    z-index: 2;
 }
-</style>
+
+        .signature__name {
+            font-size: 11pt;
+            font-weight: 700;
+            text-decoration: underline;
+            white-space: nowrap;
+        }
+
+        .signature--rw .signature__name {
+            margin-top: 1mm;
+        }
+
+        .signature--rt {
+            position: relative;
+        }
+
+        .signature--rt .signature__name {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        @media screen {
+            body {
+                background: #ddd;
+                padding: 5mm;
+            }
+
+            .letterhead__logo {
+                width: 80px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-@if ($logo)<img class="letterhead__logo" src="{{ $logo }}" alt="Logo RT/RW">@endif
-<header class="letterhead">
-<div class="letterhead__titles">
-<div>RUKUN WARGA (RW) 016</div>
-<div>RUKUN TETANGGA (RT) 005</div>
-<div>PERUM KUTABUMI 7 ASTINA KELURAHAN SUKATANI</div>
-</div>
-</header>
-<section class="content">
-<p class="opening">
-Yang bertanda tangan di bawah ini Ketua RT.005 RW.016 Perum Kuttensorflow 7
-Astina Kelurahan Sukatani Kecamatan Rajeg Kabupaten Tangerang dengan ini :
-</p>
-<table class="identity" aria-label="Data warga">
-<tbody>
-@foreach ($fields as $field)
-<tr>
-<td>{{ $field['label'] }}</td>
-<td>:</td>
-<td>
-{{ $field['value'] }}
-<span class="dotline"></span>
-</td>
-</tr>
-@endforeach
-<tr class="identity-address-row">
-<td>Alamat Sekarang</td>
-<td>:</td>
-<td>
-Perum Kuttensorflow 7 Astina Blok {{ $block }}<br>
-Kelurahan Sukatani Kec. Rajeg Kab. Tangerang.
-<span class="dotline"></span>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="purpose">
-Adalah benar penduduk/warga kami dan Surat ini dibuat dengan keterangan :
-{{ $purpose }}<span class="inline-dots"></span>
-</p>
-<p class="closing">
-Demikian surat pengantar ini dibuat untuk dapat dipergunakan sebagaimana mestinya.
-</p>
-<div class="date-row">
-<span class="date-loc">Sukatani,</span>
-<span class="date-val">{{ $date }}</span>
-</div>
-<div class="signatures">
-<div class="signature signature--rw">
-<div>Mengetahui,</div>
-<div>Ketua RW. 016</div>
-<div class="signature__name">KARMAN SUHENDRA</div>
-</div>
-<div class="signature signature--rt">
-<div>&nbsp;</div>
-<div>Ketua RT. 005 RW. 016</div>
-<div class="slot">
-@if ($stamp)<img class="stamp" src="{{ $stamp }}" alt="">@endif
-@if ($signature)<img class="sign" src="{{ $signature }}" alt="">@endif
-</div>
-<div class="signature__name">{{ $rt_signature_name ?: 'GILANG CHOIRUR R.' }}</div>
-</div>
-</div>
-</section>
+    @if ($logo)
+        <img class="letterhead__logo" src="{{ $logo }}" alt="Logo RT/RW">
+    @endif
+    <header class="letterhead">
+        <div class="letterhead__titles">
+            <div>RUKUN WARGA (RW) 016</div>
+            <div>RUKUN TETANGGA (RT) 005</div>
+            <div>PERUM KUTABUMI 7 ASTINA KELURAHAN SUKATANI</div>
+        </div>
+    </header>
+    <section class="content">
+        <p class="opening">
+            Yang bertanda tangan di bawah ini Ketua RT.005 RW.016 Perum Kutabumu 7
+            Astina Kelurahan Sukatani Kecamatan Rajeg Kabupaten Tangerang,
+            menerangkan bahwa :
+        </p>
+        <table class="identity" aria-label="Data warga">
+            <tbody>
+                @foreach ($fields as $field)
+                    <tr>
+                        <td>{{ $field['label'] }}</td>
+                        <td>:</td>
+                        <td>{{ $field['value'] }}</td>
+                    </tr>
+                @endforeach
+                <tr class="identity-address-row">
+                    <td>Alamat Sekarang</td>
+                    <td>:</td>
+                    <td>
+                        Perum Kutabumu 7 Astina Blok {{ $block }}<br>
+                        Kel. Sukatani Kec. Rajeg Kab. Tangerang.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="purpose">
+            Adalah benar penduduk/warga kami yang bertempat tinggal pada alamat tersebut di atas.
+            Surat pengantar ini diberikan untuk keperluan : {{ $purpose }}
+        </p>
+        <p class="closing">
+            Demikian surat pengantar ini dibuat untuk diketahui dan dipergunakan sebagaimana mestinya.
+        </p>
+    </section>
+    <div class="date-row">
+        <div class="date-row-right">
+            <span>Sukatani,</span> <span>{{ $date }}</span>
+        </div>
+    </div>
+    <div class="signatures">
+        <div class="signature signature--rw">
+            <div class="signature__title">Mengetahui,</div>
+            <div class="signature__official">Ketua RW. 016</div>
+            <div class="signature__name">KARMAN SUHENDRA</div>
+        </div>
+        <div class="signature signature--rt">
+            <div class="signature__official">Ketua RT. 005</div>
+            <div class="rt-slot">
+                @if ($signature)
+                    <img class="rt-slot__sign" src="{{ $signature }}" alt="">
+                @endif
+                @if ($stamp)
+                    <img class="rt-slot__stamp" src="{{ $stamp }}" alt="">
+                @endif
+            </div>
+            <div class="signature__name">{{ $rt_signature_name ?: 'GILANG CHOIRUR R.' }}</div>
+        </div>
+    </div>
 </body>
+
 </html>
