@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\DesignReport;
 use App\Models\DueBill;
 use App\Models\Letter;
+use App\Models\LogWhatsapp;
 use App\Models\Payment;
 use App\Models\Resident;
 use App\Models\SosAlert;
@@ -34,6 +36,8 @@ class DatabaseStructureTest extends TestCase
             'sos_alerts', 'sos_responses',
             'assets', 'asset_movements',
             'media',
+            'log_whatsapp',
+            'design_report',
         ];
 
         foreach ($expectedTables as $table) {
@@ -73,6 +77,8 @@ class DatabaseStructureTest extends TestCase
             'App\Models\Asset',
             'App\Models\AssetMovement',
             'App\Models\Media',
+            'App\Models\LogWhatsapp',
+            'App\Models\DesignReport',
         ];
 
         foreach ($models as $model) {
@@ -124,6 +130,21 @@ class DatabaseStructureTest extends TestCase
         $this->assertTrue(method_exists($alert, 'triggerer'));
         $this->assertTrue(method_exists($alert, 'resolver'));
         $this->assertTrue(method_exists($alert, 'responses'));
+    }
+
+    public function test_log_whatsapp_relationships(): void
+    {
+        $log = new LogWhatsapp;
+        $this->assertTrue(method_exists($log, 'resident'));
+
+        $resident = new Resident;
+        $this->assertTrue(method_exists($resident, 'whatsappLogs'));
+    }
+
+    public function test_design_report_has_timestamp_constants(): void
+    {
+        $this->assertEquals('cdt', DesignReport::CREATED_AT);
+        $this->assertEquals('mdt', DesignReport::UPDATED_AT);
     }
 
     public function test_users_resident_id_is_unique(): void
