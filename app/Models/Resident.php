@@ -77,6 +77,11 @@ class Resident extends Model
         return $this->hasMany(Letter::class);
     }
 
+    public function whatsappLogs(): HasMany
+    {
+        return $this->hasMany(LogWhatsapp::class, 'id_warga');
+    }
+
     public function media(): MorphMany
     {
         return $this->morphMany(Media::class, 'model');
