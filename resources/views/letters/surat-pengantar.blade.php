@@ -281,7 +281,7 @@
     </header>
     <section class="content">
         <p class="opening">
-            Yang bertanda tangan di bawah ini Ketua RT.005 RW.016 Perum Kutabumu 7
+            Yang bertanda tangan di bawah ini Ketua RT.005 RW.016 Perum Kutabumi 7
             Astina Kelurahan Sukatani Kecamatan Rajeg Kabupaten Tangerang,
             menerangkan bahwa :
         </p>
@@ -298,7 +298,7 @@
                     <td>Alamat Sekarang</td>
                     <td>:</td>
                     <td>
-                        Perum Kutabumu 7 Astina Blok {{ $block }}<br>
+                        Perum Kutabumi 7 Astina Blok {{ $block }}<br>
                         Kel. Sukatani Kec. Rajeg Kab. Tangerang.
                     </td>
                 </tr>
