@@ -221,9 +221,9 @@ class LetterDocumentService
             return '';
         }
 
-        $diskPath = Storage::disk('private')->path($configPath);
-        if (is_file($diskPath)) {
-            return $this->imageDataUri($diskPath);
+        $publicPath = public_path($configPath);
+        if (is_file($publicPath)) {
+            return $this->imageDataUri($publicPath);
         }
 
         return '';
