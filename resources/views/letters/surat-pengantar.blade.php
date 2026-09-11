@@ -217,7 +217,7 @@
     top: 1mm;
     left: 50%;
     transform: translateX(-50%);
-    width: 20mm;
+    width: 40mm;
     height: auto;
     z-index: 1;
 }
@@ -227,7 +227,7 @@
     top: 2mm;
     left: 50%;
     transform: translateX(-50%) rotate(-5deg);
-    width: 22mm;
+    width: 52mm;
     height: auto;
     opacity: 0.88;
     z-index: 2;
