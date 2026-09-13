@@ -100,9 +100,15 @@ class SendPushNotificationJob implements ShouldQueue
 
     private function handleFailure(string $token, mixed $error): void
     {
+        $errorMessage = $error instanceof \Throwable ? $error->getMessage() : (is_string($error) ? $error : '');
+
         $shouldRevoke = $error instanceof NotFound
             || $error instanceof InvalidArgument
-            || $error instanceof MessagingError;
+            || $error instanceof MessagingError
+            || str_contains($errorMessage, 'NotRegistered')
+            || str_contains($errorMessage, 'UNREGISTERED')
+            || str_contains($errorMessage, 'NotFound')
+            || str_contains($errorMessage, 'InvalidRegistration');
 
         if ($shouldRevoke) {
             $this->revokeToken($token);
@@ -113,6 +119,7 @@ class SendPushNotificationJob implements ShouldQueue
             'notification_type' => $this->notification->type,
             'token_prefix' => substr($token, 0, 8),
             'error' => $error instanceof \Throwable ? $error::class : (is_string($error) ? $error : 'Unknown'),
+            'revoked' => $shouldRevoke,
         ]);
     }
 
