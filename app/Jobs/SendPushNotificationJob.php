@@ -12,10 +12,11 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Exception\Messaging\InvalidArgument;
+use Kreait\Firebase\Exception\Messaging\MessagingError;
 use Kreait\Firebase\Exception\Messaging\NotFound;
 use Kreait\Firebase\Exception\Messaging\QuotaExceeded;
 use Kreait\Firebase\Exception\Messaging\ServerError;
-use Kreait\Firebase\Exception\Messaging\Unavailable;
+use Kreait\Firebase\Exception\Messaging\ServerUnavailable;
 
 class SendPushNotificationJob implements ShouldQueue
 {
@@ -50,8 +51,8 @@ class SendPushNotificationJob implements ShouldQueue
                 $this->notification->data ?? []
             );
 
-            foreach ($report->failures() as $failure) {
-                $this->handleFailure($failure->token(), $failure->error());
+            foreach ($report->failures()->getItems() as $failure) {
+                $this->handleFailure($failure->target()->value(), $failure->error());
             }
         } catch (NotFound $e) {
             $this->revokeTokens($tokens);
@@ -61,7 +62,7 @@ class SendPushNotificationJob implements ShouldQueue
                 'token_count' => count($tokens),
                 'error' => 'InvalidRegistration or NotFound',
             ]);
-        } catch (Unavailable $e) {
+        } catch (ServerUnavailable $e) {
             Log::warning('FCM unavailable, will retry', [
                 'user_id' => $this->notification->user_id,
                 'notification_type' => $this->notification->type,
@@ -97,9 +98,13 @@ class SendPushNotificationJob implements ShouldQueue
         }
     }
 
-    private function handleFailure(string $token, ?\Throwable $error): void
+    private function handleFailure(string $token, mixed $error): void
     {
-        if ($error instanceof NotFound || $error instanceof InvalidArgument) {
+        $shouldRevoke = $error instanceof NotFound
+            || $error instanceof InvalidArgument
+            || $error instanceof MessagingError;
+
+        if ($shouldRevoke) {
             $this->revokeToken($token);
         }
 
@@ -107,7 +112,7 @@ class SendPushNotificationJob implements ShouldQueue
             'user_id' => $this->notification->user_id,
             'notification_type' => $this->notification->type,
             'token_prefix' => substr($token, 0, 8),
-            'error' => $error ? $error::class : 'Unknown',
+            'error' => $error instanceof \Throwable ? $error::class : (is_string($error) ? $error : 'Unknown'),
         ]);
     }
 

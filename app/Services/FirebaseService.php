@@ -87,10 +87,11 @@ class FirebaseService
         ]);
 
         foreach ($report->failures()->getItems() as $item) {
+            $error = $item->error();
             Log::warning('FCM delivery failed', [
                 'target' => $item->target()->value(),
-                'error_code' => $item->error()?->getCode(),
-                'error_message' => $item->error()?->getMessage(),
+                'error_code' => $error?->getCode(),
+                'error_message' => $error instanceof \Throwable ? $error->getMessage() : (string) $error,
             ]);
         }
 
