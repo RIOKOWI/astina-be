@@ -88,7 +88,7 @@ class FirebaseService
 
         foreach ($report->failures()->getItems() as $item) {
             Log::warning('FCM delivery failed', [
-                'token_prefix' => substr($item->token(), 0, 8),
+                'target' => $item->target()->value(),
                 'error_code' => $item->error()?->getCode(),
                 'error_message' => $item->error()?->getMessage(),
             ]);
