@@ -10,7 +10,7 @@ use App\Services\FirebaseService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Queue;
-use Kreait\Firebase\Exception\Messaging\MessagingError;
+use Kreait\Firebase\Exception\Messaging\InvalidArgument;
 use Kreait\Firebase\Exception\Messaging\NotFound;
 use Kreait\Firebase\Messaging\MessageTarget;
 use Kreait\Firebase\Messaging\MulticastSendReport;
@@ -64,39 +64,6 @@ class SendPushNotificationJobTest extends TestCase
         Queue::assertPushed(SendPushNotificationJob::class);
     }
 
-    public function test_revokes_token_on_messaging_error(): void
-    {
-        $user = User::factory()->create(['password' => Hash::make('password')]);
-        $token = DeviceToken::create([
-            'user_id' => $user->id,
-            'token' => 'invalid_fcm_token',
-            'platform' => 'android',
-        ]);
-
-        $notification = Notification::create([
-            'user_id' => $user->id,
-            'type' => 'test_type',
-            'title' => 'Test Title',
-            'body' => 'Test Body',
-            'data' => ['type' => 'test'],
-        ]);
-
-        $messagingError = new MessagingError('NotRegistered');
-        $target = MessageTarget::with('token', 'invalid_fcm_token');
-        $failureReport = SendReport::failure($target, $messagingError);
-
-        $sendReport = MulticastSendReport::withItems([$failureReport]);
-
-        $firebaseService = Mockery::mock(FirebaseService::class);
-        $firebaseService->shouldReceive('sendToTokens')->andReturn($sendReport);
-
-        $job = new SendPushNotificationJob($notification, ['invalid_fcm_token']);
-        $job->handle($firebaseService);
-
-        $token->refresh();
-        $this->assertNotNull($token->revoked_at);
-    }
-
     public function test_revokes_token_on_not_found_exception(): void
     {
         $user = User::factory()->create(['password' => Hash::make('password')]);
@@ -114,9 +81,9 @@ class SendPushNotificationJobTest extends TestCase
             'data' => ['type' => 'test'],
         ]);
 
-        $messagingError = new NotFound('NotRegistered');
+        $notFoundError = new NotFound('NotRegistered');
         $target = MessageTarget::with('token', 'unregistered_fcm_token');
-        $failureReport = SendReport::failure($target, $messagingError);
+        $failureReport = SendReport::failure($target, $notFoundError);
 
         $sendReport = MulticastSendReport::withItems([$failureReport]);
 
@@ -124,6 +91,39 @@ class SendPushNotificationJobTest extends TestCase
         $firebaseService->shouldReceive('sendToTokens')->andReturn($sendReport);
 
         $job = new SendPushNotificationJob($notification, ['unregistered_fcm_token']);
+        $job->handle($firebaseService);
+
+        $token->refresh();
+        $this->assertNotNull($token->revoked_at);
+    }
+
+    public function test_revokes_token_on_invalid_target(): void
+    {
+        $user = User::factory()->create(['password' => Hash::make('password')]);
+        $token = DeviceToken::create([
+            'user_id' => $user->id,
+            'token' => 'invalid_fcm_token',
+            'platform' => 'android',
+        ]);
+
+        $notification = Notification::create([
+            'user_id' => $user->id,
+            'type' => 'test_type',
+            'title' => 'Test Title',
+            'body' => 'Test Body',
+            'data' => ['type' => 'test'],
+        ]);
+
+        $invalidError = new InvalidArgument('Invalid registration token');
+        $target = MessageTarget::with('token', 'invalid_fcm_token');
+        $failureReport = SendReport::failure($target, $invalidError);
+
+        $sendReport = MulticastSendReport::withItems([$failureReport]);
+
+        $firebaseService = Mockery::mock(FirebaseService::class);
+        $firebaseService->shouldReceive('sendToTokens')->andReturn($sendReport);
+
+        $job = new SendPushNotificationJob($notification, ['invalid_fcm_token']);
         $job->handle($firebaseService);
 
         $token->refresh();

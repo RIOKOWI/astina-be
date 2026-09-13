@@ -11,12 +11,11 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Kreait\Firebase\Exception\Messaging\InvalidArgument;
-use Kreait\Firebase\Exception\Messaging\MessagingError;
 use Kreait\Firebase\Exception\Messaging\NotFound;
 use Kreait\Firebase\Exception\Messaging\QuotaExceeded;
 use Kreait\Firebase\Exception\Messaging\ServerError;
 use Kreait\Firebase\Exception\Messaging\ServerUnavailable;
+use Kreait\Firebase\Messaging\SendReport;
 
 class SendPushNotificationJob implements ShouldQueue
 {
@@ -51,16 +50,20 @@ class SendPushNotificationJob implements ShouldQueue
                 $this->notification->data ?? []
             );
 
+            if ($report === null) {
+                return;
+            }
+
             foreach ($report->failures()->getItems() as $failure) {
-                $this->handleFailure($failure->target()->value(), $failure->error());
+                $this->handleFailure($failure);
             }
         } catch (NotFound $e) {
             $this->revokeTokens($tokens);
-            Log::warning('FCM notification failed: invalid tokens', [
+            Log::warning('FCM notification failed: all tokens invalid', [
                 'user_id' => $this->notification->user_id,
                 'notification_type' => $this->notification->type,
                 'token_count' => count($tokens),
-                'error' => 'InvalidRegistration or NotFound',
+                'error' => $e::class,
             ]);
         } catch (ServerUnavailable $e) {
             Log::warning('FCM unavailable, will retry', [
@@ -81,13 +84,6 @@ class SendPushNotificationJob implements ShouldQueue
                 'error' => 'ServerError',
             ]);
             throw $e;
-        } catch (InvalidArgument $e) {
-            $this->revokeTokens($tokens);
-            Log::warning('FCM invalid argument', [
-                'user_id' => $this->notification->user_id,
-                'notification_type' => $this->notification->type,
-                'error' => 'InvalidArgument',
-            ]);
         } catch (\Throwable $e) {
             Log::error('FCM notification failed', [
                 'user_id' => $this->notification->user_id,
@@ -98,17 +94,11 @@ class SendPushNotificationJob implements ShouldQueue
         }
     }
 
-    private function handleFailure(string $token, mixed $error): void
+    private function handleFailure(SendReport $failure): void
     {
-        $errorMessage = $error instanceof \Throwable ? $error->getMessage() : (is_string($error) ? $error : '');
-
-        $shouldRevoke = $error instanceof NotFound
-            || $error instanceof InvalidArgument
-            || $error instanceof MessagingError
-            || str_contains($errorMessage, 'NotRegistered')
-            || str_contains($errorMessage, 'UNREGISTERED')
-            || str_contains($errorMessage, 'NotFound')
-            || str_contains($errorMessage, 'InvalidRegistration');
+        $token = $failure->target()->value();
+        $shouldRevoke = $failure->messageWasSentToUnknownToken()
+            || $failure->messageTargetWasInvalid();
 
         if ($shouldRevoke) {
             $this->revokeToken($token);
@@ -118,7 +108,7 @@ class SendPushNotificationJob implements ShouldQueue
             'user_id' => $this->notification->user_id,
             'notification_type' => $this->notification->type,
             'token_prefix' => substr($token, 0, 8),
-            'error' => $error instanceof \Throwable ? $error::class : (is_string($error) ? $error : 'Unknown'),
+            'error' => $failure->error() instanceof \Throwable ? $failure->error()::class : 'Unknown',
             'revoked' => $shouldRevoke,
         ]);
     }
