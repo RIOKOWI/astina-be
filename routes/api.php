@@ -117,6 +117,7 @@ Route::prefix('v1')->group(function () {
 
         // Payment
         Route::get('/my/payments', [PaymentController::class, 'myPayments']);
+        Route::get('/payments', [PaymentController::class, 'index']);
         Route::post('/payments', [PaymentController::class, 'store']);
         Route::get('/payments/pending', [PaymentController::class, 'pending']);
         Route::get('/payments/{payment}', [PaymentController::class, 'show']);
