@@ -21,6 +21,40 @@ class PaymentController extends Controller
         private readonly PaymentService $paymentService,
     ) {}
 
+    public function index(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user->hasRole('bendahara')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki akses.',
+                'errors' => null,
+                'data' => null,
+            ], 403);
+        }
+
+        $perPage = $request->integer('per_page', 15);
+        $status = $request->string('status')->toString();
+        $status = $status !== '' ? $status : null;
+
+        $payments = $this->paymentService->getAllPayments($perPage, $status);
+        $data = $payments->getCollection()->map(fn ($p) => new PaymentResource($p));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Daftar pembayaran berhasil diambil.',
+            'data' => [
+                'data' => $data->toArray(),
+            ],
+            'meta' => [
+                'current_page' => $payments->currentPage(),
+                'last_page' => $payments->lastPage(),
+                'per_page' => $payments->perPage(),
+                'total' => $payments->total(),
+            ],
+        ]);
+    }
+
     public function myPayments(Request $request): JsonResponse
     {
         $residentId = $request->user()->resident_id;
