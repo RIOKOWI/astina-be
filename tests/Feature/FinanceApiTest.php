@@ -495,6 +495,47 @@ class FinanceApiTest extends TestCase
         $response->assertStatus(201);
     }
 
+    public function test_all_payments_list(): void
+    {
+        Payment::factory()->count(2)->create(['status' => 'pending']);
+        Payment::factory()->count(3)->create(['status' => 'approved']);
+        Payment::factory()->count(1)->create(['status' => 'rejected']);
+
+        $response = $this->actingAs($this->bendaharaUser)->getJson('/api/v1/payments');
+
+        $response->assertOk();
+        $this->assertEquals(6, $response->json('meta.total'));
+    }
+
+    public function test_all_payments_list_filter_by_status(): void
+    {
+        Payment::factory()->count(2)->create(['status' => 'pending']);
+        Payment::factory()->count(3)->create(['status' => 'approved']);
+
+        $response = $this->actingAs($this->bendaharaUser)->getJson('/api/v1/payments?status=approved');
+
+        $response->assertOk();
+        $this->assertEquals(3, $response->json('meta.total'));
+    }
+
+    public function test_warga_cannot_access_all_payments(): void
+    {
+        Payment::factory()->count(3)->create();
+
+        $response = $this->actingAs($this->wargaUser)->getJson('/api/v1/payments');
+
+        $response->assertStatus(403);
+    }
+
+    public function test_rt_cannot_access_all_payments(): void
+    {
+        Payment::factory()->count(3)->create();
+
+        $response = $this->actingAs($this->rtUser)->getJson('/api/v1/payments');
+
+        $response->assertStatus(403);
+    }
+
     public function test_my_payments_list(): void
     {
         Payment::factory()->count(3)->create(['resident_id' => $this->resident->id]);
