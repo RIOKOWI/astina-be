@@ -185,6 +185,19 @@ class PaymentService
             ->paginate($perPage);
     }
 
+    public function getAllPayments(int $perPage = 15, ?string $status = null): LengthAwarePaginator
+    {
+        $query = Payment::query()
+            ->with(['resident', 'dueBill.due', 'proofs'])
+            ->orderByDesc('created_at');
+
+        if ($status !== null) {
+            $query->where('status', $status);
+        }
+
+        return $query->paginate($perPage);
+    }
+
     public function getPendingPayments(int $perPage = 15): LengthAwarePaginator
     {
         return Payment::query()
