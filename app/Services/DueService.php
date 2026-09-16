@@ -119,6 +119,7 @@ class DueService
         return DueBill::query()
             ->with('due')
             ->where('resident_id', $residentId)
+            ->whereIn('status', ['unpaid', 'pending', 'rejected'])
             ->orderByDesc('due_date')
             ->paginate($perPage);
     }
